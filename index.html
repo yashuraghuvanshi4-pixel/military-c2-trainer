@@ -36,7 +36,7 @@
 </head>
 <body class="bg-c2bg text-slate-200 h-screen flex flex-col overflow-hidden font-sans antialiased">
 
-  <!-- TOP HIGH-TECH C2 HEADER & COCKPIT WIDGETS (IMAGE 4 & IMAGE 2 INTEGRATED) -->
+  <!-- TOP HIGH-TECH C2 HEADER & COCKPIT WIDGETS -->
   <header class="bg-c2panel border-b border-c2border px-3 py-1.5 flex items-center justify-between z-30 shadow-2xl select-none">
     
     <!-- Left Logo & Branding -->
@@ -58,7 +58,7 @@
       </div>
     </div>
 
-    <!-- Center Top Cockpit Gauges (Image 4 replica) -->
+    <!-- Center Top Cockpit Gauges (Image 5 replica) -->
     <div class="hidden lg:flex items-center space-x-4 font-mono text-[10px]">
       <!-- Gauge 1: Cannons -->
       <div class="flex items-center space-x-2 bg-c2card border border-c2border px-2 py-1 rounded">
@@ -78,7 +78,7 @@
         <div class="w-6 h-6 rounded-full border-2 border-tamber border-r-transparent"></div>
       </div>
 
-      <!-- Operation Stats Counters (Image 4 replica) -->
+      <!-- Operation Stats Counters -->
       <div class="flex items-center space-x-3 bg-c2card border border-c2border px-3 py-1 rounded">
         <div><span class="text-slate-500 block text-[8px]">UNITS</span><span class="text-slate-200 font-bold">5,144</span></div>
         <div class="h-5 w-px bg-slate-800"></div>
@@ -149,7 +149,7 @@
         </button>
       </div>
 
-      <!-- TAB 1: PALANTIR AIP DECISION SUPPORT ASSISTANT (IMAGE 1 REPLICA) -->
+      <!-- TAB 1: PALANTIR AIP DECISION SUPPORT ASSISTANT (IMAGE 2 REPLICA) -->
       <div id="left-tab-aip" class="flex-1 flex flex-col overflow-y-auto p-3 space-y-3">
         
         <!-- CPT Emerson Review Header -->
@@ -227,7 +227,7 @@
           </button>
         </div>
 
-        <!-- Bottom AIP Query Input Box (Image 1 replica) -->
+        <!-- Bottom AIP Query Input Box -->
         <div class="mt-auto p-2 bg-c2card border border-c2border rounded-lg flex items-center space-x-2">
           <input type="text" id="aip-query-input" class="flex-1 bg-c2dark border border-slate-700 rounded px-2.5 py-1.5 text-xs font-mono text-slate-200 outline-none focus:border-aipblue" placeholder="Start typing something to explore with AIP...">
           <button onclick="submitAipQuery()" class="p-2 bg-aipblue hover:bg-blue-600 text-white rounded shadow-[0_0_8px_rgba(29,107,243,0.5)]">
@@ -237,10 +237,10 @@
 
       </div>
 
-      <!-- TAB 2: BLUFOR HIERARCHY & SQUAD MAP INVENTORY (IMAGE 2 & 3 REPLICA) -->
+      <!-- TAB 2: BLUFOR HIERARCHY & SQUAD MAP INVENTORY -->
       <div id="left-tab-hierarchy" class="hidden flex-1 flex flex-col overflow-y-auto p-3 space-y-3">
         
-        <!-- Teams & Roles Red Header Hierarchy (Image 2 replica) -->
+        <!-- Teams & Roles Red Header Hierarchy -->
         <div class="border border-red-900/60 rounded bg-c2dark overflow-hidden font-mono text-xs">
           <div class="px-3 py-1.5 bg-red-950/80 text-red-200 font-bold border-b border-red-800 uppercase flex items-center justify-between">
             <span>Teams and Roles (BLUFOR)</span>
@@ -281,7 +281,7 @@
           </div>
         </div>
 
-        <!-- Vehicle & Equipment Inventory List (Image 3 SquadMaps replica) -->
+        <!-- Vehicle & Equipment Inventory List -->
         <div class="border border-c2border rounded bg-c2dark p-2 space-y-1.5 font-mono text-xs">
           <div class="text-tamber font-bold text-[11px] flex justify-between border-b border-slate-800 pb-1">
             <span>Western Contractors Inventory</span>
@@ -316,11 +316,41 @@
 
     </aside>
 
-    <!-- CENTER PANEL: MULTI-DOMAIN GIS TACTICAL MAP (IMAGE 1, 3, & 4 REPLICA) -->
+    <!-- CENTER PANEL: MULTI-DOMAIN GIS TACTICAL MAP & VR SPATIAL NODE BAR -->
     <section class="flex-1 flex flex-col bg-c2dark relative overflow-hidden">
 
-      <!-- Map Overlay Toolbar -->
-      <div class="absolute top-3 left-3 z-20 flex items-center space-x-2 bg-c2panel/90 backdrop-blur border border-c2border p-1.5 rounded-lg shadow-2xl">
+      <!-- VR Spatial Node Status Array (Image 1 VR Spatial Node Grid replica) -->
+      <div class="bg-c2dark/90 border-b border-c2border px-3 py-1.5 flex items-center justify-between text-xs font-mono z-20">
+        <div class="flex items-center space-x-2 overflow-x-auto py-0.5">
+          <span class="text-tcyan font-bold text-[10px] uppercase tracking-wider shrink-0">VR Mesh Nodes:</span>
+          
+          <div class="vr-node-card px-2 py-0.5 rounded text-[9px] text-tcyan font-bold flex items-center gap-1 shrink-0">
+            <i data-lucide="radio" class="w-3 h-3"></i> ATAK_MDC2_INTEL
+          </div>
+          <div class="vr-node-card px-2 py-0.5 rounded text-[9px] text-tcyan font-bold flex items-center gap-1 shrink-0">
+            <i data-lucide="crosshair" class="w-3 h-3"></i> ATAK_MDC2_Targets
+          </div>
+          <div class="vr-node-card px-2 py-0.5 rounded text-[9px] text-tgreen font-bold flex items-center gap-1 shrink-0">
+            <i data-lucide="wifi" class="w-3 h-3"></i> Silvus Node #01
+          </div>
+          <div class="vr-node-card px-2 py-0.5 rounded text-[9px] text-tamber font-bold flex items-center gap-1 shrink-0">
+            <i data-lucide="cpu" class="w-3 h-3"></i> GCS Control Node
+          </div>
+          <div class="vr-node-card px-2 py-0.5 rounded text-[9px] text-tcyan font-bold flex items-center gap-1 shrink-0">
+            <i data-lucide="plane" class="w-3 h-3"></i> ATAK_Gold_ATK
+          </div>
+          <span class="px-2 py-0.5 rounded bg-blue-950 text-tcyan font-black text-[9px] border border-tcyan/40 shrink-0">
+            116 MORE NODES
+          </span>
+        </div>
+
+        <div class="text-[10px] text-slate-400 shrink-0">
+          BEARING: <span class="text-tcyan font-bold">21 nmi | 97° | Alt Change: 0m</span>
+        </div>
+      </div>
+
+      <!-- Map Domain Layer Toggles -->
+      <div class="absolute top-12 left-3 z-20 flex items-center space-x-2 bg-c2panel/90 backdrop-blur border border-c2border p-1.5 rounded-lg shadow-2xl">
         <span class="text-[10px] font-mono text-slate-400 px-2 font-bold uppercase tracking-wider border-r border-slate-700">Domain Layers</span>
         
         <button id="layer-land" onclick="toggleDomainLayer('land')" class="px-2.5 py-1 rounded text-xs font-mono font-bold bg-tcyan/20 text-tcyan border border-tcyan/50 flex items-center gap-1 shadow-[0_0_8px_rgba(0,240,255,0.2)]">
@@ -341,7 +371,7 @@
       </div>
 
       <!-- Map Tools Top Right -->
-      <div class="absolute top-3 right-3 z-20 flex items-center space-x-2 bg-c2panel/90 backdrop-blur border border-c2border p-1.5 rounded-lg shadow-2xl text-xs font-mono">
+      <div class="absolute top-12 right-3 z-20 flex items-center space-x-2 bg-c2panel/90 backdrop-blur border border-c2border p-1.5 rounded-lg shadow-2xl text-xs font-mono">
         <button onclick="mapZoomIn()" class="p-1.5 bg-slate-800 border border-slate-700 rounded text-slate-200 hover:text-tcyan" title="Zoom In">
           <i data-lucide="plus" class="w-4 h-4"></i>
         </button>
@@ -373,7 +403,7 @@
         </div>
       </div>
 
-      <!-- BOTTOM TIMELINE GANTT CHART & SCENARIO ANALYTICS (IMAGE 2 & 4 INTEGRATED) -->
+      <!-- BOTTOM TIMELINE GANTT CHART & SCENARIO ANALYTICS -->
       <div class="h-48 bg-c2panel border-t border-c2border flex flex-col z-20">
         <div class="px-3 py-1 bg-c2dark border-b border-c2border flex items-center justify-between text-xs font-mono">
           <div class="flex items-center space-x-3">
@@ -397,7 +427,7 @@
 
     </section>
 
-    <!-- RIGHT PANEL: SUB-UNIT CAMERA VIDEO FEEDS (2x3 GRID MATCHING IMAGE 2) -->
+    <!-- RIGHT PANEL: SUB-UNIT CAMERA VIDEO FEEDS -->
     <aside class="w-[420px] bg-c2panel border-l border-c2border flex flex-col z-20 shadow-2xl relative">
       
       <!-- Panel Header -->
@@ -423,7 +453,7 @@
         </button>
       </div>
 
-      <!-- 2x3 Grid Container matching Image 2 feeds -->
+      <!-- 2x3 Grid Container -->
       <div class="flex-1 grid grid-cols-2 grid-rows-3 gap-2 p-2 overflow-y-auto">
 
         <!-- Feed 1: KAdams -->

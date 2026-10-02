@@ -1,4 +1,4 @@
-/* High-End Palantir AIP & C2 Tactical Command Aesthetic */
+/* High-End Palantir AIP, C2 Cockpit & VR Spatial Tactical Aesthetic */
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 :root {
@@ -54,6 +54,19 @@ body {
   background: #00F0FF;
 }
 
+/* VR Spatial Node Bar Styling (Image 1 VR Node Grid replica) */
+.vr-node-card {
+  background: rgba(13, 24, 43, 0.85);
+  border: 1px solid rgba(0, 240, 255, 0.35);
+  backdrop-filter: blur(6px);
+  transition: all 0.2s ease;
+}
+.vr-node-card:hover {
+  background: rgba(29, 107, 243, 0.3);
+  border-color: #00F0FF;
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.4);
+}
+
 /* HUD Glassmorphism & Corner Reticles */
 .hud-card {
   background: rgba(18, 24, 38, 0.9);
@@ -86,12 +99,6 @@ body {
   bottom: -1px; right: -1px;
   border-bottom: 2px solid var(--tcyan);
   border-right: 2px solid var(--tcyan);
-}
-
-/* Circular Gauge Ring Utilities */
-.gauge-circle {
-  transform: rotate(-90deg);
-  transform-origin: 50% 50%;
 }
 
 /* Scanlines & Video Overlay */

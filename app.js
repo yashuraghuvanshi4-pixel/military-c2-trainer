@@ -1,6 +1,6 @@
 /**
- * Palantir AIP & C2 Military Simulation Platform Engine
- * Designed to integrate interface patterns from Palantir AIP, SquadMaps, and C2 Cockpit Dashboards.
+ * Palantir AIP, C2 Cockpit & VR Spatial Military Simulation Platform Engine
+ * Advanced Graphical Upgrade: Realistic Satellite Grid, 3D Unit Vectors, VR Spatial Node Array
  */
 
 // ==========================================
@@ -44,22 +44,22 @@ const state = {
     measureEnd: null
   },
   
-  // Units & Positions (Inspired by Image 1 & Image 3)
+  // Units & Positions (Inspired by Image 1 VR Spatial & Palantir AIP)
   units: [
     { name: 'KNIGHT 114 (HIMARS)', x: 180, y: 340, type: 'blue-artillery' },
     { name: '159th Artillery BN', x: 220, y: 390, type: 'blue-artillery' },
     { name: 'Team Foxtrot', x: 150, y: 450, type: 'blue-squad' },
     { name: '72nd Armor Brigade', x: 260, y: 490, type: 'blue-armor' },
     { name: 'Team Omega', x: 530, y: 470, type: 'blue-squad' },
-    { name: 'HAWK 11 (F-16)', x: 500, y: 560, type: 'blue-air' },
+    { name: 'HAWK 11 (F-16)', x: 500, y: 560, type: 'blue-air', angle: 45 },
     
-    // Red Threat Targets (Image 1 replica)
+    // Red Threat Targets (Palantir AIP Image 2 replica)
     { name: 'Military Command', x: 580, y: 140, type: 'red-target', destroyed: false },
     { name: 'Comms Facility', x: 500, y: 220, type: 'red-target', destroyed: false },
     { name: 'Confirmed Armor Attack BN', x: 540, y: 290, type: 'red-target', destroyed: false }
   ],
 
-  // SquadMaps Hexagon Waypoint Cap Points (Image 3 replica)
+  // SquadMaps Hexagon Waypoint Cap Points
   waypoints: [
     { id: 1, name: 'Shanty Town', x: 300, y: 160 },
     { id: 2, name: 'Abandoned Airfield', x: 360, y: 180 },
@@ -182,7 +182,7 @@ function updateClocks() {
 setInterval(updateClocks, 1000);
 
 // ==========================================
-// 4. INTERACTIVE TACTICAL CANVAS MAP
+// 4. ADVANCED GRAPHICAL TACTICAL CANVAS MAP
 // ==========================================
 let mapCanvas, mapCtx;
 
@@ -306,20 +306,30 @@ function renderMap() {
   mapCtx.translate(state.map.panX, state.map.panY);
   mapCtx.scale(state.map.zoom, state.map.zoom);
 
-  // 1. Dark Satellite Map Background
+  // 1. High-Res Dark Satellite Terrain Background (Image 1 VR & Image 5 replica)
   mapCtx.fillStyle = '#070b12';
   mapCtx.fillRect(0, 0, w, h);
 
-  // Contour Terrain Rings
-  mapCtx.strokeStyle = 'rgba(30, 41, 59, 0.35)';
+  // Draw Detailed Topographic Elevation Contour Lines
+  mapCtx.strokeStyle = 'rgba(30, 43, 66, 0.4)';
   mapCtx.lineWidth = 1;
-  for (let r = 80; r < 600; r += 70) {
+  for (let r = 60; r < 700; r += 50) {
     mapCtx.beginPath();
-    mapCtx.arc(380, 260, r, 0, Math.PI * 2);
+    mapCtx.arc(400, 300, r, 0, Math.PI * 2);
     mapCtx.stroke();
   }
 
-  // 2. Red Threat Radius Zone (Palantir AIP Image 1 replica)
+  // Draw 3D Spatial Grid Wireframe Mesh (Image 1 VR Spatial Grid replica)
+  mapCtx.strokeStyle = 'rgba(0, 240, 255, 0.07)';
+  mapCtx.lineWidth = 1;
+  for (let gx = 0; gx < w; gx += 40) {
+    mapCtx.beginPath(); mapCtx.moveTo(gx, 0); mapCtx.lineTo(gx, h); mapCtx.stroke();
+  }
+  for (let gy = 0; gy < h; gy += 40) {
+    mapCtx.beginPath(); mapCtx.moveTo(0, gy); mapCtx.lineTo(w, gy); mapCtx.stroke();
+  }
+
+  // 2. Red Threat Radius Dome (Palantir AIP Image 2 replica)
   if (state.layers.ew) {
     const time = Date.now() * 0.002;
     const pulseR = 120 + Math.sin(time) * 10;
@@ -330,63 +340,87 @@ function renderMap() {
     grad.addColorStop(1, 'rgba(239, 68, 68, 0.0)');
 
     mapCtx.fillStyle = grad;
-    mapCtx.beginPath();
-    mapCtx.arc(520, 230, pulseR, 0, Math.PI * 2);
-    mapCtx.fill();
+    mapCtx.beginPath(); mapCtx.arc(520, 230, pulseR, 0, Math.PI * 2); mapCtx.fill();
 
     mapCtx.strokeStyle = 'rgba(239, 68, 68, 0.6)';
     mapCtx.lineWidth = 1.5;
     mapCtx.setLineDash([6, 4]);
-    mapCtx.beginPath();
-    mapCtx.arc(520, 230, pulseR, 0, Math.PI * 2);
-    mapCtx.stroke();
+    mapCtx.beginPath(); mapCtx.arc(520, 230, pulseR, 0, Math.PI * 2); mapCtx.stroke();
     mapCtx.setLineDash([]);
   }
 
-  // 3. Cyber Datalink Vector Rays (Image 1 dashed line vectors to targets)
+  // 3. Cyber Datalink Vector Rays (Image 1 & Image 5 replica)
   if (state.layers.cyber) {
-    mapCtx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+    mapCtx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
     mapCtx.lineWidth = 1;
     mapCtx.setLineDash([4, 4]);
 
-    // Vector 1: HIMARS to Target
     mapCtx.beginPath(); mapCtx.moveTo(180, 340); mapCtx.lineTo(540, 290); mapCtx.stroke();
-    // Vector 2: Team Omega to Target
     mapCtx.beginPath(); mapCtx.moveTo(530, 470); mapCtx.lineTo(540, 290); mapCtx.stroke();
-    // Vector 3: F-16 to Target
     mapCtx.beginPath(); mapCtx.moveTo(500, 560); mapCtx.lineTo(540, 290); mapCtx.stroke();
 
     mapCtx.setLineDash([]);
+
+    // Animated Red Cyber Datalink Beam (Image 1 VR Datalink replica)
+    const t = Date.now() * 0.001;
+    mapCtx.strokeStyle = 'rgba(239, 68, 68, 0.8)';
+    mapCtx.lineWidth = 2;
+    mapCtx.beginPath();
+    mapCtx.moveTo(180, 340);
+    mapCtx.lineTo(180 + (540 - 180) * ((t % 2) / 2), 340 + (290 - 340) * ((t % 2) / 2));
+    mapCtx.stroke();
   }
 
-  // 4. SquadMaps Hexagon Waypoint Cap Points (Image 3 replica)
+  // 4. VR Spatial Holographic Operator Avatar Pin ("Smack Target" marker from Image 1 VR replica)
+  if (state.layers.air) {
+    mapCtx.save();
+    mapCtx.translate(680, 380);
+    
+    // Glowing Blue Head Silhouette
+    mapCtx.fillStyle = '#00F0FF';
+    mapCtx.beginPath(); mapCtx.arc(0, -20, 8, 0, Math.PI * 2); mapCtx.fill();
+    mapCtx.beginPath(); mapCtx.arc(0, -4, 14, Math.PI, 0); mapCtx.fill();
+
+    // VR Holographic Stand Pole
+    mapCtx.strokeStyle = 'rgba(0, 240, 255, 0.8)';
+    mapCtx.lineWidth = 1.5;
+    mapCtx.beginPath(); mapCtx.moveTo(0, 0); mapCtx.lineTo(0, 30); mapCtx.stroke();
+
+    // "Smack Target" Pill Tag (Image 1 VR replica)
+    mapCtx.fillStyle = 'rgba(13, 18, 29, 0.9)';
+    mapCtx.strokeStyle = '#00F0FF';
+    mapCtx.lineWidth = 1;
+    mapCtx.beginPath(); mapCtx.roundRect(15, -15, 80, 20, 4); mapCtx.fill(); mapCtx.stroke();
+    mapCtx.fillStyle = '#FFFFFF'; mapCtx.font = 'bold 9px monospace';
+    mapCtx.fillText('Smack Target', 22, -2);
+    
+    mapCtx.restore();
+  }
+
+  // 5. SquadMaps Hexagon Waypoint Cap Points (Image 4 replica)
   if (state.layers.land) {
     state.waypoints.forEach(wp => {
       mapCtx.fillStyle = 'rgba(0, 240, 255, 0.15)';
       mapCtx.strokeStyle = '#00F0FF';
       mapCtx.lineWidth = 1.5;
 
-      // Draw Diamond Cap Marker
       mapCtx.beginPath();
       mapCtx.moveTo(wp.x, wp.y - 12);
       mapCtx.lineTo(wp.x + 10, wp.y);
       mapCtx.lineTo(wp.x, wp.y + 12);
       mapCtx.lineTo(wp.x - 10, wp.y);
       mapCtx.closePath();
-      mapCtx.fill();
-      mapCtx.stroke();
+      mapCtx.fill(); mapCtx.stroke();
 
-      mapCtx.fillStyle = '#FFFFFF';
-      mapCtx.font = 'bold 10px monospace';
+      mapCtx.fillStyle = '#FFFFFF'; mapCtx.font = 'bold 10px monospace';
       mapCtx.fillText(wp.id, wp.x - 3, wp.y + 3);
 
-      mapCtx.fillStyle = '#94A3B8';
-      mapCtx.font = '9px monospace';
+      mapCtx.fillStyle = '#94A3B8'; mapCtx.font = '9px monospace';
       mapCtx.fillText(wp.name, wp.x - 25, wp.y - 15);
     });
   }
 
-  // 5. Unit Markers (Blue Squares & Red Diamonds from Image 1)
+  // 6. Unit Markers (F-16 Jet Vector, HIMARS Truck, NATO Blue Square & Red Diamond from Image 1 & Image 2)
   state.units.forEach(u => {
     if (u.type === 'red-target') {
       if (!u.destroyed) {
@@ -399,35 +433,52 @@ function renderMap() {
         mapCtx.lineTo(u.x - 10, u.y);
         mapCtx.closePath();
         mapCtx.fill();
-        mapCtx.strokeStyle = '#FFFFFF';
-        mapCtx.lineWidth = 1.5;
-        mapCtx.stroke();
+        mapCtx.strokeStyle = '#FFFFFF'; mapCtx.lineWidth = 1.5; mapCtx.stroke();
 
-        mapCtx.fillStyle = '#EF4444';
-        mapCtx.font = 'bold 9px monospace';
+        mapCtx.fillStyle = '#EF4444'; mapCtx.font = 'bold 9px monospace';
         mapCtx.fillText(u.name, u.x - 35, u.y + 22);
       } else {
         // Neutralized Target Cross
-        mapCtx.strokeStyle = '#EF4444';
-        mapCtx.lineWidth = 2;
+        mapCtx.strokeStyle = '#EF4444'; mapCtx.lineWidth = 2;
         mapCtx.beginPath();
         mapCtx.moveTo(u.x - 10, u.y - 10); mapCtx.lineTo(u.x + 10, u.y + 10);
         mapCtx.moveTo(u.x + 10, u.y - 10); mapCtx.lineTo(u.x - 10, u.y + 10);
         mapCtx.stroke();
-        mapCtx.fillStyle = '#10B981';
-        mapCtx.font = 'bold 9px monospace';
+        mapCtx.fillStyle = '#10B981'; mapCtx.font = 'bold 9px monospace';
         mapCtx.fillText('NEUTRALIZED', u.x - 30, u.y + 22);
       }
+    } else if (u.type === 'blue-air') {
+      // Detailed F-16 Fighter Jet Sprite (Image 1 VR F-16 replica)
+      u.x += Math.sin(Date.now() * 0.001) * 0.5;
+      mapCtx.save();
+      mapCtx.translate(u.x, u.y);
+      mapCtx.fillStyle = '#00F0FF';
+      mapCtx.beginPath();
+      mapCtx.moveTo(0, -14);
+      mapCtx.lineTo(10, 10);
+      mapCtx.lineTo(0, 4);
+      mapCtx.lineTo(-10, 10);
+      mapCtx.closePath();
+      mapCtx.fill();
+      
+      // Contrail Vector Trail
+      mapCtx.strokeStyle = 'rgba(0, 240, 255, 0.4)'; mapCtx.lineWidth = 1.5;
+      mapCtx.beginPath(); mapCtx.moveTo(0, 4); mapCtx.lineTo(-30, 40); mapCtx.stroke();
+
+      mapCtx.restore();
+
+      // Air Telemetry Label (21 nmi | FL240)
+      mapCtx.fillStyle = '#00F0FF'; mapCtx.font = 'bold 9px monospace';
+      mapCtx.fillText(`${u.name} [21 nmi | FL240]`, u.x - 45, u.y + 24);
+
     } else {
       // Blue Square NATO Unit Marker
       mapCtx.fillStyle = '#1D6BF3';
       mapCtx.fillRect(u.x - 9, u.y - 9, 18, 18);
-      mapCtx.strokeStyle = '#FFFFFF';
-      mapCtx.lineWidth = 1.5;
+      mapCtx.strokeStyle = '#FFFFFF'; mapCtx.lineWidth = 1.5;
       mapCtx.strokeRect(u.x - 9, u.y - 9, 18, 18);
 
-      mapCtx.fillStyle = '#00F0FF';
-      mapCtx.font = 'bold 9px monospace';
+      mapCtx.fillStyle = '#00F0FF'; mapCtx.font = 'bold 9px monospace';
       mapCtx.fillText(u.name, u.x - 30, u.y + 24);
     }
   });
@@ -436,21 +487,16 @@ function renderMap() {
   if (state.targetPing) {
     const p = state.targetPing;
     const pulseR = 12 + Math.sin(Date.now() * 0.008) * 6;
-    mapCtx.strokeStyle = '#F59E0B';
-    mapCtx.lineWidth = 2;
-    mapCtx.beginPath();
-    mapCtx.arc(p.x, p.y, pulseR, 0, Math.PI * 2);
-    mapCtx.stroke();
+    mapCtx.strokeStyle = '#F59E0B'; mapCtx.lineWidth = 2;
+    mapCtx.beginPath(); mapCtx.arc(p.x, p.y, pulseR, 0, Math.PI * 2); mapCtx.stroke();
 
-    mapCtx.fillStyle = '#F59E0B';
-    mapCtx.font = 'bold 10px monospace';
+    mapCtx.fillStyle = '#F59E0B'; mapCtx.font = 'bold 10px monospace';
     mapCtx.fillText(`DESIGNATED TARGET [${p.mgrs}]`, p.x - 50, p.y - 12);
   }
 
   // Ruler Distance Measure
   if (state.map.measureStart && state.map.measureEnd) {
-    mapCtx.strokeStyle = '#F59E0B';
-    mapCtx.lineWidth = 2;
+    mapCtx.strokeStyle = '#F59E0B'; mapCtx.lineWidth = 2;
     mapCtx.setLineDash([4, 4]);
     mapCtx.beginPath();
     mapCtx.moveTo(state.map.measureStart.x, state.map.measureStart.y);
@@ -542,7 +588,7 @@ function initFeedCanvases() {
 }
 
 // ==========================================
-// 6. TIMELINE GANTT CHART ENGINE (IMAGE 2 & 4 REPLICA)
+// 6. TIMELINE GANTT CHART ENGINE
 // ==========================================
 function initTimelineChart() {
   const canvas = document.getElementById('timeline-chart');
@@ -557,7 +603,6 @@ function initTimelineChart() {
     ctx.fillStyle = '#0d121d';
     ctx.fillRect(0, 0, w, h);
 
-    // Timeline Header Bar
     ctx.fillStyle = '#121826';
     ctx.fillRect(0, 0, w, 24);
     ctx.strokeStyle = '#1e283d';
@@ -573,7 +618,6 @@ function initTimelineChart() {
       ctx.beginPath(); ctx.moveTo(x + 20, 24); ctx.lineTo(x + 20, h); ctx.strokeStyle = 'rgba(30, 41, 61, 0.4)'; ctx.stroke();
     });
 
-    // Gantt Rows matching Image 2 & Image 4
     const rows = [
       { label: 'Enter and Clear 1st Room', color: '#10B981', start: 0.2, end: 0.9 },
       { label: 'Neutralize OPFOR Target', color: state.units[6].destroyed ? '#10B981' : '#EF4444', start: 0.1, end: 0.75 },
@@ -585,12 +629,10 @@ function initTimelineChart() {
     rows.forEach((r, idx) => {
       const y = 32 + idx * 24;
       
-      // Row Label
       ctx.fillStyle = '#cbd5e1';
       ctx.font = '10px monospace';
       ctx.fillText(r.label, 8, y + 14);
 
-      // Gantt Progress Bar Block
       const startX = 140 + r.start * (w - 160);
       const barW = (r.end - r.start) * (w - 160);
 
@@ -600,7 +642,6 @@ function initTimelineChart() {
       ctx.strokeRect(startX, y + 4, barW, 14);
     });
 
-    // Blue Playhead Scrub Line (Image 2 replica)
     const playX = 140 + (Date.now() * 0.02 % (w - 160));
     ctx.strokeStyle = '#00F0FF';
     ctx.lineWidth = 2;
