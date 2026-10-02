@@ -1,6 +1,6 @@
 /**
- * Palantir AIP, C2 Cockpit, Google Maps GIS & RTS Game Simulation Platform Engine
- * Real Google Satellite Tiles, Animated Soldier Sprites, Squad Waypoint Movement, & Gunfire Tracers
+ * Palantir AIP, C2 Cockpit, Real Satellite GIS & Army Camera Feed Engine
+ * High-Fidelity Natural Camera Feeds: M4 Rifle 3D Bodycam, NVG Phosphor IR Laser, FLIR Thermal Heat Signatures, & CQB Breach Simulation
  */
 
 // ==========================================
@@ -60,7 +60,7 @@ const state = {
   // Gunfire Tracer Particles Array
   tracers: [],
 
-  // Units & Positions (Inspired by Palantir AIP & SquadMaps)
+  // Units & Positions
   units: [
     { name: 'KNIGHT 114 (HIMARS)', x: 180, y: 340, type: 'blue-artillery' },
     { name: '159th Artillery BN', x: 220, y: 390, type: 'blue-artillery' },
@@ -136,7 +136,6 @@ function initLeafletMap() {
   const mapContainer = document.getElementById('leaflet-map');
   if (!mapContainer) return;
 
-  // Center over Kuwait City / Desert Operation Area
   state.leafletMap = L.map('leaflet-map', {
     center: [29.3759, 47.9774],
     zoom: 13,
@@ -144,7 +143,6 @@ function initLeafletMap() {
     attributionControl: false
   });
 
-  // Google Satellite Tile URL Subdomains
   const googleSatUrl = 'https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}';
   state.leafletTileLayer = L.tileLayer(googleSatUrl, {
     maxZoom: 20,
@@ -270,7 +268,6 @@ function triggerGunfireSimulation() {
   playBeep(1200, 'sawtooth', 0.1);
   setTimeout(() => playBeep(600, 'sawtooth', 0.15), 100);
 
-  // Spawn gunfire tracers between Squad & OPFOR targets
   for (let i = 0; i < 12; i++) {
     const s = state.soldiers[i % 4];
     state.tracers.push({
@@ -286,11 +283,9 @@ function triggerGunfireSimulation() {
   }
 }
 
-// Update Soldier Positions & Tracers Loop
 function updateSimulationState() {
   if (state.simSpeed === 0) return;
 
-  // Move soldiers towards target
   state.soldiers.forEach(s => {
     const dx = s.targetX - s.x;
     const dy = s.targetY - s.y;
@@ -304,7 +299,6 @@ function updateSimulationState() {
     }
   });
 
-  // Move tracers
   state.tracers.forEach(t => {
     t.progress += t.speed * state.simSpeed;
     t.currentX = t.startX + (t.targetX - t.startX) * t.progress;
@@ -314,7 +308,7 @@ function updateSimulationState() {
 }
 
 // ==========================================
-// 5. TACTICAL CANVAS MAP & SOLDIERS RENDERER
+// 5. TACTICAL CANVAS MAP RENDERER
 // ==========================================
 let mapCanvas, mapCtx;
 
@@ -330,7 +324,6 @@ function initMapCanvas() {
   window.addEventListener('resize', resizeCanvas);
   resizeCanvas();
 
-  // Mouse pan & zoom
   mapCanvas.addEventListener('mousedown', (e) => {
     const rect = mapCanvas.getBoundingClientRect();
     const clickX = e.clientX - rect.left;
@@ -440,7 +433,7 @@ function renderMap() {
   mapCtx.translate(state.map.panX, state.map.panY);
   mapCtx.scale(state.map.zoom, state.map.zoom);
 
-  // 1. Red Threat Radius Dome (Palantir AIP replica)
+  // Threat Radius Domes
   if (state.layers.ew) {
     const time = Date.now() * 0.002;
     const pulseR = 120 + Math.sin(time) * 10;
@@ -460,7 +453,7 @@ function renderMap() {
     mapCtx.setLineDash([]);
   }
 
-  // 2. Cyber Datalink Vector Rays
+  // Cyber Datalink Vectors
   if (state.layers.cyber) {
     mapCtx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
     mapCtx.lineWidth = 1;
@@ -473,99 +466,60 @@ function renderMap() {
     mapCtx.setLineDash([]);
   }
 
-  // 3. Render Animated BLUFOR Soldier Sprites (RTS Game Simulation)
+  // BLUFOR Soldier Figures
   if (state.layers.land) {
     state.soldiers.forEach(s => {
-      // Draw Soldier Body Figure
       mapCtx.fillStyle = '#00F0FF';
-      mapCtx.beginPath(); mapCtx.arc(s.x, s.y - 6, 4, 0, Math.PI * 2); mapCtx.fill(); // Helmet Head
-      mapCtx.fillRect(s.x - 4, s.y - 2, 8, 10); // Body Armor Uniform
+      mapCtx.beginPath(); mapCtx.arc(s.x, s.y - 6, 4, 0, Math.PI * 2); mapCtx.fill();
+      mapCtx.fillRect(s.x - 4, s.y - 2, 8, 10);
 
-      // Rifle Weapon Barrel
-      mapCtx.strokeStyle = '#FFFFFF';
-      mapCtx.lineWidth = 2;
+      mapCtx.strokeStyle = '#FFFFFF'; mapCtx.lineWidth = 2;
       mapCtx.beginPath(); mapCtx.moveTo(s.x, s.y); mapCtx.lineTo(s.x + 8, s.y - 2); mapCtx.stroke();
 
-      // Mini Health Bar above Soldier
-      mapCtx.fillStyle = 'rgba(0, 0, 0, 0.6)';
-      mapCtx.fillRect(s.x - 10, s.y - 14, 20, 3);
-      mapCtx.fillStyle = '#10B981';
-      mapCtx.fillRect(s.x - 10, s.y - 14, 20 * (s.health / 100), 3);
+      mapCtx.fillStyle = 'rgba(0, 0, 0, 0.6)'; mapCtx.fillRect(s.x - 10, s.y - 14, 20, 3);
+      mapCtx.fillStyle = '#10B981'; mapCtx.fillRect(s.x - 10, s.y - 14, 20 * (s.health / 100), 3);
 
-      // Soldier Name Tag
-      mapCtx.fillStyle = '#00F0FF';
-      mapCtx.font = 'bold 8px monospace';
+      mapCtx.fillStyle = '#00F0FF'; mapCtx.font = 'bold 8px monospace';
       mapCtx.fillText(s.name, s.x - 22, s.y + 16);
     });
   }
 
-  // 4. Render Gunfire Tracers Particles
+  // Tracers
   state.tracers.forEach(t => {
-    mapCtx.strokeStyle = '#F59E0B';
-    mapCtx.lineWidth = 2;
-    mapCtx.beginPath();
-    mapCtx.moveTo(t.currentX, t.currentY);
-    mapCtx.lineTo(t.currentX - 10, t.currentY - 10);
-    mapCtx.stroke();
-
-    // Hit spark particle at tracer head
-    mapCtx.fillStyle = '#EF4444';
-    mapCtx.beginPath(); mapCtx.arc(t.currentX, t.currentY, 3, 0, Math.PI * 2); mapCtx.fill();
+    mapCtx.strokeStyle = '#F59E0B'; mapCtx.lineWidth = 2;
+    mapCtx.beginPath(); mapCtx.moveTo(t.currentX, t.currentY); mapCtx.lineTo(t.currentX - 10, t.currentY - 10); mapCtx.stroke();
+    mapCtx.fillStyle = '#EF4444'; mapCtx.beginPath(); mapCtx.arc(t.currentX, t.currentY, 3, 0, Math.PI * 2); mapCtx.fill();
   });
 
-  // 5. SquadMaps Hexagon Waypoint Cap Points
+  // Waypoints
   if (state.layers.land) {
     state.waypoints.forEach(wp => {
-      mapCtx.fillStyle = 'rgba(0, 240, 255, 0.2)';
-      mapCtx.strokeStyle = '#00F0FF';
-      mapCtx.lineWidth = 1.5;
-
+      mapCtx.fillStyle = 'rgba(0, 240, 255, 0.2)'; mapCtx.strokeStyle = '#00F0FF'; mapCtx.lineWidth = 1.5;
       mapCtx.beginPath();
-      mapCtx.moveTo(wp.x, wp.y - 12);
-      mapCtx.lineTo(wp.x + 10, wp.y);
-      mapCtx.lineTo(wp.x, wp.y + 12);
-      mapCtx.lineTo(wp.x - 10, wp.y);
-      mapCtx.closePath();
-      mapCtx.fill(); mapCtx.stroke();
-
-      mapCtx.fillStyle = '#FFFFFF'; mapCtx.font = 'bold 10px monospace';
-      mapCtx.fillText(wp.id, wp.x - 3, wp.y + 3);
+      mapCtx.moveTo(wp.x, wp.y - 12); mapCtx.lineTo(wp.x + 10, wp.y);
+      mapCtx.lineTo(wp.x, wp.y + 12); mapCtx.lineTo(wp.x - 10, wp.y);
+      mapCtx.closePath(); mapCtx.fill(); mapCtx.stroke();
+      mapCtx.fillStyle = '#FFFFFF'; mapCtx.font = 'bold 10px monospace'; mapCtx.fillText(wp.id, wp.x - 3, wp.y + 3);
     });
   }
 
-  // 6. Unit Markers
+  // Units
   state.units.forEach(u => {
     if (u.type === 'red-target') {
       if (!u.destroyed) {
         mapCtx.fillStyle = '#EF4444';
-        mapCtx.beginPath();
-        mapCtx.moveTo(u.x, u.y - 10);
-        mapCtx.lineTo(u.x + 10, u.y);
-        mapCtx.lineTo(u.x, u.y + 10);
-        mapCtx.lineTo(u.x - 10, u.y);
-        mapCtx.closePath();
-        mapCtx.fill();
+        mapCtx.beginPath(); mapCtx.moveTo(u.x, u.y - 10); mapCtx.lineTo(u.x + 10, u.y); mapCtx.lineTo(u.x, u.y + 10); mapCtx.lineTo(u.x - 10, u.y); mapCtx.closePath(); mapCtx.fill();
         mapCtx.strokeStyle = '#FFFFFF'; mapCtx.lineWidth = 1.5; mapCtx.stroke();
-
-        mapCtx.fillStyle = '#EF4444'; mapCtx.font = 'bold 9px monospace';
-        mapCtx.fillText(u.name, u.x - 35, u.y + 22);
+        mapCtx.fillStyle = '#EF4444'; mapCtx.font = 'bold 9px monospace'; mapCtx.fillText(u.name, u.x - 35, u.y + 22);
       } else {
         mapCtx.strokeStyle = '#EF4444'; mapCtx.lineWidth = 2;
-        mapCtx.beginPath();
-        mapCtx.moveTo(u.x - 10, u.y - 10); mapCtx.lineTo(u.x + 10, u.y + 10);
-        mapCtx.moveTo(u.x + 10, u.y - 10); mapCtx.lineTo(u.x - 10, u.y + 10);
-        mapCtx.stroke();
-        mapCtx.fillStyle = '#10B981'; mapCtx.font = 'bold 9px monospace';
-        mapCtx.fillText('NEUTRALIZED', u.x - 30, u.y + 22);
+        mapCtx.beginPath(); mapCtx.moveTo(u.x - 10, u.y - 10); mapCtx.lineTo(u.x + 10, u.y + 10); mapCtx.moveTo(u.x + 10, u.y - 10); mapCtx.lineTo(u.x - 10, u.y + 10); mapCtx.stroke();
+        mapCtx.fillStyle = '#10B981'; mapCtx.font = 'bold 9px monospace'; mapCtx.fillText('NEUTRALIZED', u.x - 30, u.y + 22);
       }
     } else {
-      mapCtx.fillStyle = '#1D6BF3';
-      mapCtx.fillRect(u.x - 9, u.y - 9, 18, 18);
-      mapCtx.strokeStyle = '#FFFFFF'; mapCtx.lineWidth = 1.5;
-      mapCtx.strokeRect(u.x - 9, u.y - 9, 18, 18);
-
-      mapCtx.fillStyle = '#00F0FF'; mapCtx.font = 'bold 9px monospace';
-      mapCtx.fillText(u.name, u.x - 30, u.y + 24);
+      mapCtx.fillStyle = '#1D6BF3'; mapCtx.fillRect(u.x - 9, u.y - 9, 18, 18);
+      mapCtx.strokeStyle = '#FFFFFF'; mapCtx.lineWidth = 1.5; mapCtx.strokeRect(u.x - 9, u.y - 9, 18, 18);
+      mapCtx.fillStyle = '#00F0FF'; mapCtx.font = 'bold 9px monospace'; mapCtx.fillText(u.name, u.x - 30, u.y + 24);
     }
   });
 
@@ -575,19 +529,13 @@ function renderMap() {
     const pulseR = 12 + Math.sin(Date.now() * 0.008) * 6;
     mapCtx.strokeStyle = '#F59E0B'; mapCtx.lineWidth = 2;
     mapCtx.beginPath(); mapCtx.arc(p.x, p.y, pulseR, 0, Math.PI * 2); mapCtx.stroke();
-
-    mapCtx.fillStyle = '#F59E0B'; mapCtx.font = 'bold 10px monospace';
-    mapCtx.fillText(`DESIGNATED TARGET [${p.mgrs}]`, p.x - 50, p.y - 12);
+    mapCtx.fillStyle = '#F59E0B'; mapCtx.font = 'bold 10px monospace'; mapCtx.fillText(`DESIGNATED TARGET [${p.mgrs}]`, p.x - 50, p.y - 12);
   }
 
-  // Ruler Distance Measure
+  // Ruler Measurement
   if (state.map.measureStart && state.map.measureEnd) {
-    mapCtx.strokeStyle = '#F59E0B'; mapCtx.lineWidth = 2;
-    mapCtx.setLineDash([4, 4]);
-    mapCtx.beginPath();
-    mapCtx.moveTo(state.map.measureStart.x, state.map.measureStart.y);
-    mapCtx.lineTo(state.map.measureEnd.x, state.map.measureEnd.y);
-    mapCtx.stroke();
+    mapCtx.strokeStyle = '#F59E0B'; mapCtx.lineWidth = 2; mapCtx.setLineDash([4, 4]);
+    mapCtx.beginPath(); mapCtx.moveTo(state.map.measureStart.x, state.map.measureStart.y); mapCtx.lineTo(state.map.measureEnd.x, state.map.measureEnd.y); mapCtx.stroke();
     mapCtx.setLineDash([]);
   }
 
@@ -598,16 +546,13 @@ function renderMap() {
 function toggleDomainLayer(domain) {
   state.layers[domain] = !state.layers[domain];
   const btn = document.getElementById(`layer-${domain}`);
-  if (state.layers[domain]) {
-    btn.className = "px-2.5 py-1 rounded text-xs font-mono font-bold bg-tcyan/20 text-tcyan border border-tcyan/50 flex items-center gap-1 shadow-[0_0_8px_rgba(0,240,255,0.2)]";
-  } else {
-    btn.className = "px-2.5 py-1 rounded text-xs font-mono font-bold bg-slate-800 text-slate-400 border border-slate-700 hover:text-white flex items-center gap-1";
-  }
+  if (state.layers[domain]) btn.className = "px-2.5 py-1 rounded text-xs font-mono font-bold bg-tcyan/20 text-tcyan border border-tcyan/50 flex items-center gap-1 shadow-[0_0_8px_rgba(0,240,255,0.2)]";
+  else btn.className = "px-2.5 py-1 rounded text-xs font-mono font-bold bg-slate-800 text-slate-400 border border-slate-700 hover:text-white flex items-center gap-1";
   playBeep(900, 'sine', 0.05);
 }
 
 // ==========================================
-// 6. SUB-UNIT PROCEDURAL VIDEO FEEDS
+// 6. HIGH-DEFINITION NATURAL SUB-UNIT CAMERA FEEDS RENDERER
 // ==========================================
 function initFeedCanvases() {
   for (let i = 1; i <= 6; i++) {
@@ -618,14 +563,15 @@ function initFeedCanvases() {
       const ctx = canvas.getContext('2d');
       const w = canvas.width = canvas.parentElement.clientWidth || 180;
       const h = canvas.height = canvas.parentElement.clientHeight || 120;
-      const t = Date.now() * 0.002;
+      const t = Date.now() * 0.0025;
 
-      ctx.fillStyle = '#06090e';
+      ctx.fillStyle = '#04070c';
       ctx.fillRect(0, 0, w, h);
 
       const isDropped = state.droppedFeeds.has(i);
 
       if (isDropped || (state.commsDegraded && Math.random() < 0.35)) {
+        // Render Signal Lost Static Noise
         const imgData = ctx.createImageData(w, h);
         const data = imgData.data;
         for (let p = 0; p < data.length; p += 4) {
@@ -634,37 +580,167 @@ function initFeedCanvases() {
         }
         ctx.putImageData(imgData, 0, 0);
 
-        ctx.fillStyle = '#EF4444';
-        ctx.font = 'bold 11px monospace';
+        ctx.fillStyle = '#EF4444'; ctx.font = 'bold 11px monospace';
         ctx.fillText('NO SIGNAL / EW JAMMED', w / 2 - 60, h / 2);
       } else {
-        if (i === 1 || i === 2) {
-          ctx.fillStyle = (i === 2) ? '#052b14' : '#0e1726';
+        
+        // RENDER NATURAL TACTICAL CAMERA FEEDS BY ROLE
+        if (i === 1) {
+          // CAM-01: KAdams Optical First-Person Bodycam (Real Rifle & Moving Squadmate)
+          ctx.fillStyle = '#101622';
           ctx.fillRect(0, 0, w, h);
-          ctx.fillStyle = (i === 2) ? '#10B981' : '#1e293b';
-          ctx.fillRect(20, 10, w - 40, h - 10);
-          ctx.fillStyle = (i === 2) ? '#052b14' : '#080c14';
-          ctx.fillRect(40, 20, w - 80, h - 20);
 
-          const sx = w / 2 + Math.sin(t * 1.5) * 15;
-          ctx.fillStyle = (i === 2) ? '#34d399' : '#475569';
-          ctx.beginPath(); ctx.arc(sx, h / 2 - 10, 8, 0, Math.PI * 2); ctx.fillRect(sx - 10, h / 2 - 2, 20, 25); ctx.fill();
+          // Compound Wall & Doorway Angle Perspective
+          ctx.fillStyle = '#1a2333'; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(60, 20); ctx.lineTo(60, h - 20); ctx.lineTo(0, h); ctx.fill();
+          ctx.fillStyle = '#0b0f19'; ctx.fillRect(60, 20, w - 120, h - 40);
 
-          ctx.strokeStyle = (i === 2) ? '#10B981' : '#00F0FF';
-          ctx.lineWidth = 1; ctx.strokeRect(w / 2 - 15, h / 2 - 15, 30, 30);
+          // Squadmate moving ahead in MultiCam military uniform & helmet
+          const soldierX = w / 2 + Math.sin(t * 1.5) * 12;
+          ctx.fillStyle = '#475569'; // MultiCam uniform torso
+          ctx.fillRect(soldierX - 8, h / 2 - 4, 16, 22);
+          ctx.fillStyle = '#334155'; // Tactical vest
+          ctx.fillRect(soldierX - 6, h / 2 - 2, 12, 14);
+          ctx.fillStyle = '#64748b'; // Military Helmet
+          ctx.beginPath(); ctx.arc(soldierX, h / 2 - 10, 6, Math.PI, 0); ctx.fill();
+
+          // Operator's own M4 Rifle Barrel in bottom right foreground
+          const gunSwayY = Math.sin(t * 3) * 3;
+          ctx.fillStyle = '#1e293b'; ctx.fillRect(w - 70, h - 35 + gunSwayY, 70, 35);
+          ctx.fillStyle = '#0f172a'; ctx.fillRect(w - 60, h - 30 + gunSwayY, 50, 10); // Optic rail
+
+          // HUD Pitch/Roll Horizon & Telemetry
+          ctx.strokeStyle = '#00F0FF'; ctx.lineWidth = 1;
+          ctx.strokeRect(w / 2 - 12, h / 2 - 12, 24, 24);
+          ctx.fillStyle = '#00F0FF'; ctx.font = '8px monospace';
+          ctx.fillText('CAM-01 // OPTICAL 1080P // ISO 800', 6, 12);
+
+        } else if (i === 2) {
+          // CAM-02: LMarshall Helmet NVG (Authentic Green Phosphor Shader & IR Laser)
+          ctx.fillStyle = '#031f0e'; // Deep NVG green phosphor background
+          ctx.fillRect(0, 0, w, h);
+
+          // NVG Vignette Circle
+          const nvgGrad = ctx.createRadialGradient(w / 2, h / 2, 30, w / 2, h / 2, w / 2);
+          nvgGrad.addColorStop(0, 'rgba(5, 43, 20, 0.1)');
+          nvgGrad.addColorStop(1, 'rgba(0, 0, 0, 0.85)');
+          ctx.fillStyle = nvgGrad; ctx.fillRect(0, 0, w, h);
+
+          // Room doorway & soldier silhouette in NVG green
+          ctx.fillStyle = '#10B981';
+          ctx.fillRect(40, 15, w - 80, h - 30);
+          ctx.fillStyle = '#042711';
+          ctx.fillRect(55, 25, w - 110, h - 50);
+
+          // Soldier in NVG bright green phosphor glow
+          const sx = w / 2 + Math.sin(t * 1.2) * 10;
+          ctx.fillStyle = '#34d399';
+          ctx.beginPath(); ctx.arc(sx, h / 2 - 8, 7, 0, Math.PI * 2); ctx.fill();
+          ctx.fillRect(sx - 7, h / 2, 14, 20);
+
+          // Infrared (IR) Laser Beam Vector Line
+          ctx.strokeStyle = '#10B981'; ctx.lineWidth = 1.5; ctx.setLineDash([2, 2]);
+          ctx.beginPath(); ctx.moveTo(w - 20, h - 10); ctx.lineTo(sx, h / 2 - 4); ctx.stroke(); ctx.setLineDash([]);
+
+          ctx.fillStyle = '#10B981'; ctx.font = '8px monospace';
+          ctx.fillText('CAM-02 // NVG GREEN PHOSPHOR // IR ACTIVE', 6, 12);
+
+        } else if (i === 3) {
+          // CAM-03: MLawson FLIR Thermal (White-Hot / Black-Hot Body Heat Signatures)
+          ctx.fillStyle = '#0f172a';
+          ctx.fillRect(0, 0, w, h);
+
+          // Thermal Body Heat Signatures (Glowing White/Orange/Red)
+          const hx = w / 2 + Math.cos(t) * 18;
+          const hy = h / 2 + Math.sin(t) * 8;
+
+          const flirGrad = ctx.createRadialGradient(hx, hy, 4, hx, hy, 28);
+          flirGrad.addColorStop(0, '#FFFFFF'); // Hot core
+          flirGrad.addColorStop(0.4, '#F59E0B'); // Body heat
+          flirGrad.addColorStop(0.8, '#EF4444'); // Dissipation
+          flirGrad.addColorStop(1, 'rgba(15, 23, 42, 0)');
+
+          ctx.fillStyle = flirGrad;
+          ctx.beginPath(); ctx.arc(hx, hy, 28, 0, Math.PI * 2); ctx.fill();
+
+          // FLIR Reticle
+          ctx.strokeStyle = '#F59E0B'; ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.moveTo(w / 2 - 10, h / 2); ctx.lineTo(w / 2 + 10, h / 2); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(w / 2, h / 2 - 10); ctx.lineTo(w / 2, h / 2 + 10); ctx.stroke();
+
+          ctx.fillStyle = '#F59E0B'; ctx.font = '8px monospace';
+          ctx.fillText('CAM-03 // FLIR THERMAL // WHITE-HOT', 6, 12);
+
+        } else if (i === 4) {
+          // CAM-04: TGREGORY / First Room CQB Breach (Overhead Security Cam)
+          ctx.fillStyle = '#090d16';
+          ctx.fillRect(0, 0, w, h);
+
+          // Room Wall Layout & Doorway
+          ctx.strokeStyle = 'rgba(0, 240, 255, 0.4)'; ctx.lineWidth = 1.5;
+          ctx.strokeRect(15, 15, w - 30, h - 30);
+
+          // Breach Squad Soldiers entering room in tactical formation
+          for (let s = 0; s < 3; s++) {
+            const bx = 30 + s * 22 + Math.sin(t + s) * 4;
+            const by = 40 + s * 12;
+            ctx.fillStyle = '#00F0FF'; ctx.beginPath(); ctx.arc(bx, by, 5, 0, Math.PI * 2); ctx.fill();
+            ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 1; ctx.strokeRect(bx - 7, by - 7, 14, 14);
+          }
+
+          // Target Lock Bounding Box
+          ctx.strokeStyle = '#EF4444'; ctx.lineWidth = 1.5;
+          ctx.strokeRect(w - 60, h - 50, 30, 30);
+          ctx.fillStyle = '#EF4444'; ctx.font = '8px monospace';
+          ctx.fillText('HOSTILE', w - 65, h - 55);
+
+          ctx.fillStyle = '#00F0FF'; ctx.font = '8px monospace';
+          ctx.fillText('CAM-04 // CQB FIRST ROOM BREACH', 6, 12);
+
+        } else if (i === 5) {
+          // CAM-05: Second Room Radar Node FLIR Interior
+          ctx.fillStyle = '#080d19';
+          ctx.fillRect(0, 0, w, h);
+
+          // Radar Console & Server Rack Dish Spinning
+          ctx.strokeStyle = '#F59E0B'; ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.arc(w / 2, h / 2, 22, 0, Math.PI * 2); ctx.stroke();
+
+          const radarAngle = t * 2;
+          ctx.beginPath(); ctx.moveTo(w / 2, h / 2);
+          ctx.lineTo(w / 2 + Math.cos(radarAngle) * 22, h / 2 + Math.sin(radarAngle) * 22);
+          ctx.stroke();
+
+          // Server Blinking LEDs
+          ctx.fillStyle = (Math.sin(t * 10) > 0) ? '#10B981' : '#EF4444';
+          ctx.fillRect(20, 20, 6, 6);
+          ctx.fillRect(20, 32, 6, 6);
+
+          ctx.fillStyle = '#F59E0B'; ctx.font = '8px monospace';
+          ctx.fillText('CAM-05 // RADAR NODE INTERIOR', 6, 12);
+
         } else {
-          ctx.fillStyle = '#0a0f1d';
+          // CAM-06: Outside Overwatch Drone Aerial View
+          ctx.fillStyle = '#0a101d';
           ctx.fillRect(0, 0, w, h);
-          ctx.strokeStyle = 'rgba(0, 240, 255, 0.4)';
-          ctx.lineWidth = 1; ctx.strokeRect(30, 20, w - 60, h - 40);
 
-          const bx = 40 + (Math.sin(t * 0.8) + 1) * (w - 100) / 2;
-          ctx.strokeStyle = '#F59E0B'; ctx.strokeRect(bx, 30, 25, 35);
-          ctx.fillStyle = '#F59E0B'; ctx.font = '9px monospace'; ctx.fillText('TARGET DETECTED', bx - 10, 25);
+          // Ground Road & Moving Vehicle Drive-by
+          ctx.fillStyle = '#1e293b'; ctx.fillRect(0, h / 2 - 10, w, 20);
+          const vx = (t * 40) % (w + 40) - 20;
+          ctx.fillStyle = '#F59E0B'; ctx.fillRect(vx, h / 2 - 6, 16, 12);
+
+          // Drone Targeting Crosshairs
+          ctx.strokeStyle = '#00F0FF'; ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.arc(w / 2, h / 2, 18, 0, Math.PI * 2); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(w / 2 - 25, h / 2); ctx.lineTo(w / 2 + 25, h / 2); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(w / 2, h / 2 - 25); ctx.lineTo(w / 2, h / 2 + 25); ctx.stroke();
+
+          ctx.fillStyle = '#00F0FF'; ctx.font = '8px monospace';
+          ctx.fillText('CAM-06 // OVERWATCH REAPER DRONE', 6, 12);
         }
 
-        ctx.fillStyle = '#00F0FF'; ctx.font = '9px monospace';
-        ctx.fillText(`FPS: 30 | LAT: ${state.commsLagSeconds > 0 ? '+' + state.commsLagSeconds + 's' : '12ms'}`, 8, h - 8);
+        // Live Camera Telemetry Readout
+        ctx.fillStyle = '#00F0FF'; ctx.font = '8px monospace';
+        ctx.fillText(`FPS: 60 | LAT: ${state.commsLagSeconds > 0 ? '+' + state.commsLagSeconds + 's' : '12ms'}`, 8, h - 8);
       }
 
       requestAnimationFrame(drawFeed);
