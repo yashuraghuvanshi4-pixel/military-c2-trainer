@@ -1,0 +1,178 @@
+/* Modern Defense C2 Tactical Aesthetic & Custom Utilities */
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  --bg-darker: #06090e;
+  --bg-dark: #0b0f19;
+  --bg-panel: #111827;
+  --bg-panel-border: #1e293b;
+  --bg-panel-hover: #1f293d;
+  
+  --tactical-blue: #00F0FF;
+  --tactical-blue-glow: rgba(0, 240, 255, 0.25);
+  --tactical-green: #10B981;
+  --tactical-green-glow: rgba(16, 185, 129, 0.25);
+  --tactical-amber: #F59E0B;
+  --tactical-amber-glow: rgba(245, 158, 11, 0.25);
+  --tactical-red: #EF4444;
+  --tactical-red-glow: rgba(239, 68, 68, 0.3);
+  --tactical-purple: #8B5CF6;
+  
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: var(--bg-darker);
+  color: #e2e8f0;
+  font-family: var(--font-sans);
+  overflow: hidden;
+  user-select: none;
+}
+
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+/* Custom Tactical Scrollbars */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.6);
+}
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #00F0FF;
+}
+
+/* Tactical HUD Borders & Reticles */
+.hud-box {
+  position: relative;
+  background: rgba(17, 24, 39, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(51, 65, 85, 0.7);
+}
+
+.hud-box::before, .hud-box::after {
+  content: '';
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  pointer-events: none;
+}
+.hud-corner-tl::before {
+  top: -1px; left: -1px;
+  border-top: 2px solid var(--tactical-blue);
+  border-left: 2px solid var(--tactical-blue);
+}
+.hud-corner-br::after {
+  bottom: -1px; right: -1px;
+  border-bottom: 2px solid var(--tactical-blue);
+  border-right: 2px solid var(--tactical-blue);
+}
+
+.hud-corner-red::before {
+  top: -1px; left: -1px;
+  border-top: 2px solid var(--tactical-red);
+  border-left: 2px solid var(--tactical-red);
+}
+.hud-corner-red::after {
+  bottom: -1px; right: -1px;
+  border-bottom: 2px solid var(--tactical-red);
+  border-right: 2px solid var(--tactical-red);
+}
+
+/* Glowing text & borders */
+.glow-blue {
+  text-shadow: 0 0 8px rgba(0, 240, 255, 0.6);
+}
+.glow-amber {
+  text-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
+}
+.glow-red {
+  text-shadow: 0 0 10px rgba(239, 68, 68, 0.7);
+}
+
+.border-tactical-blue {
+  border-color: rgba(0, 240, 255, 0.4);
+}
+.border-tactical-amber {
+  border-color: rgba(245, 158, 11, 0.5);
+}
+
+/* Grid Background Pattern */
+.bg-grid-pattern {
+  background-size: 30px 30px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+}
+
+/* Scanline Overlay for Video Feeds */
+.scanlines {
+  position: relative;
+  overflow: hidden;
+}
+.scanlines::before {
+  content: " ";
+  display: block;
+  position: absolute;
+  top: 0; left: 0; bottom: 0; right: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.4) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+  z-index: 10;
+  background-size: 100% 3px, 6px 100%;
+  pointer-events: none;
+}
+
+/* Comms Degraded Glitch Animation */
+@keyframes glitch-anim {
+  0% { transform: translate(0); }
+  20% { transform: translate(-2px, 2px); }
+  40% { transform: translate(-2px, -2px); }
+  60% { transform: translate(2px, 2px); }
+  80% { transform: translate(2px, -2px); }
+  100% { transform: translate(0); }
+}
+
+.glitch-active {
+  animation: glitch-anim 0.2s infinite;
+  filter: contrast(140%) hue-rotate(90deg) brightness(80%);
+}
+
+/* Pulsing indicators */
+@keyframes pulse-fast {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.3; transform: scale(1.15); }
+}
+.animate-pulse-fast {
+  animation: pulse-fast 1s infinite ease-in-out;
+}
+
+@keyframes radar-sweep {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.radar-sweep-line {
+  transform-origin: center center;
+  animation: radar-sweep 4s linear infinite;
+}
+
+/* Modal Blur Backdrop */
+.modal-backdrop {
+  background: rgba(4, 7, 13, 0.82);
+  backdrop-filter: blur(12px);
+}
+
+/* Custom Range Slider */
+input[type=range] {
+  accent-color: var(--tactical-blue);
+}

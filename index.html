@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Immersive Multi-Domain Decision-Making Trainer | Ministry of Defence</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            c2bg: '#0B0F19',
+            c2dark: '#06090e',
+            c2panel: '#111827',
+            c2border: '#1E293B',
+            tcyan: '#00F0FF',
+            tgreen: '#10B981',
+            tamber: '#F59E0B',
+            tred: '#EF4444',
+            tpurple: '#8B5CF6'
+          }
+        }
+      }
+    }
+  </script>
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-c2dark text-slate-200 h-screen flex flex-col overflow-hidden font-sans antialiased">
+
+  <!-- TOP NAVIGATION & STATUS BAR -->
+  <header class="bg-c2panel border-b border-c2border px-4 py-2 flex items-center justify-between z-30 shadow-lg select-none">
+    <!-- Branding & Mission -->
+    <div class="flex items-center space-x-4">
+      <div class="flex items-center space-x-2">
+        <div class="w-8 h-8 rounded bg-cyan-950 border border-tcyan/50 flex items-center justify-center text-tcyan font-black text-xs font-mono shadow-[0_0_10px_rgba(0,240,255,0.3)]">
+          MOD
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <span class="text-xs font-mono font-bold tracking-widest text-tcyan">UK MINISTRY OF DEFENCE</span>
+            <span class="px-1.5 py-0.5 text-[9px] font-mono uppercase bg-red-950/80 text-red-400 border border-red-800 rounded font-semibold tracking-wider">SECRET // REL TO NATO</span>
+          </div>
+          <h1 class="text-sm font-bold text-slate-100 tracking-wide flex items-center gap-2">
+            Operation Desert Storm / Hybrid Domain Exercise
+            <span class="text-[10px] font-mono text-slate-400 font-normal">(SIM-ID: C2-DEGRADED-2026-X)</span>
+          </h1>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live Mission Clock & Sim Speed Controls -->
+    <div class="flex items-center space-x-6">
+      <!-- Timestamp Clocks -->
+      <div class="flex items-center space-x-4 text-xs font-mono bg-slate-900/90 border border-slate-700/60 px-3 py-1 rounded">
+        <div>
+          <span class="text-slate-400 text-[10px] block leading-none uppercase">Zulu / UTC</span>
+          <span id="utc-clock" class="text-tcyan font-bold text-sm">19:05:21Z</span>
+        </div>
+        <div class="h-6 w-px bg-slate-700"></div>
+        <div>
+          <span class="text-slate-400 text-[10px] block leading-none uppercase">Elapsed Time</span>
+          <span id="mission-timer" class="text-tamber font-bold text-sm">T+04:12:45</span>
+        </div>
+      </div>
+
+      <!-- Sim Speed Controls -->
+      <div class="flex items-center bg-slate-900/90 border border-slate-700/60 rounded p-1 space-x-1 text-xs">
+        <button id="btn-pause" onclick="setSimSpeed(0)" class="px-2 py-1 rounded text-slate-400 hover:text-white hover:bg-slate-800 transition flex items-center gap-1">
+          <i data-lucide="pause" class="w-3.5 h-3.5"></i>
+        </button>
+        <button id="btn-play" onclick="setSimSpeed(1)" class="px-2.5 py-1 rounded bg-tcyan/20 text-tcyan border border-tcyan/40 font-mono font-bold flex items-center gap-1">
+          <i data-lucide="play" class="w-3.5 h-3.5"></i> 1x
+        </button>
+        <button id="btn-speed2" onclick="setSimSpeed(2)" class="px-2 py-1 rounded text-slate-400 hover:text-white hover:bg-slate-800 font-mono transition">2x</button>
+        <button id="btn-speed5" onclick="setSimSpeed(5)" class="px-2 py-1 rounded text-slate-400 hover:text-white hover:bg-slate-800 font-mono transition">5x</button>
+        <button id="btn-speed10" onclick="setSimSpeed(10)" class="px-2 py-1 rounded text-slate-400 hover:text-white hover:bg-slate-800 font-mono transition">10x</button>
+      </div>
+
+      <!-- Quick Action Buttons -->
+      <div class="flex items-center space-x-2">
+        <button onclick="toggleAudio()" id="btn-audio" class="p-1.5 rounded bg-slate-800 border border-slate-700 text-slate-300 hover:text-tcyan transition" title="Toggle Tactical Audio">
+          <i data-lucide="volume-2" class="w-4 h-4"></i>
+        </button>
+
+        <button onclick="openModal('instructor-modal')" class="px-3 py-1.5 rounded bg-amber-950/70 text-tamber border border-amber-600/50 hover:bg-amber-900/80 transition text-xs font-mono font-bold flex items-center gap-1.5 shadow-[0_0_10px_rgba(245,158,11,0.2)]">
+          <i data-lucide="zap" class="w-3.5 h-3.5"></i> Scenario Inject
+        </button>
+
+        <button onclick="openModal('coa-modal')" class="px-3 py-1.5 rounded bg-cyan-950/70 text-tcyan border border-cyan-500/50 hover:bg-cyan-900/80 transition text-xs font-mono font-bold flex items-center gap-1.5 shadow-[0_0_10px_rgba(0,240,255,0.2)]">
+          <i data-lucide="bot" class="w-3.5 h-3.5"></i> AI COA Assistant
+        </button>
+
+        <button onclick="openModal('aar-modal')" class="px-3 py-1.5 rounded bg-purple-950/70 text-purple-300 border border-purple-500/50 hover:bg-purple-900/80 transition text-xs font-mono font-bold flex items-center gap-1.5">
+          <i data-lucide="file-text" class="w-3.5 h-3.5"></i> AAR Report
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN TACTICAL INTERFACE (SPLIT-SCREEN WORKSPACE) -->
+  <main class="flex-1 flex overflow-hidden relative">
+
+    <!-- LEFT SIDEBAR: MISSION & BLUFOR HIERARCHY -->
+    <aside class="w-80 bg-c2panel/95 border-r border-c2border flex flex-col z-20 shadow-xl">
+      <!-- Header -->
+      <div class="px-3 py-2.5 bg-slate-900 border-b border-c2border flex items-center justify-between">
+        <span class="text-xs font-mono font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+          <i data-lucide="shield" class="w-4 h-4 text-tcyan"></i> BLUFOR Unit Hierarchy
+        </span>
+        <span class="text-[10px] font-mono bg-tgreen/20 text-tgreen px-1.5 py-0.5 rounded border border-tgreen/40">4 ACTIVE UNITS</span>
+      </div>
+
+      <!-- Hierarchy Tree View -->
+      <div class="flex-1 overflow-y-auto p-2 space-y-2 text-xs">
+        
+        <!-- Platoon Group -->
+        <div class="border border-slate-700/60 rounded bg-slate-900/50 overflow-hidden">
+          <div class="px-2.5 py-1.5 bg-slate-800/80 font-mono font-bold text-tcyan flex items-center justify-between cursor-pointer" onclick="toggleTree('platoon-1')">
+            <div class="flex items-center space-x-2">
+              <i data-lucide="chevron-down" id="platoon-1-arrow" class="w-3.5 h-3.5 text-slate-400 transition-transform"></i>
+              <span>1st Platoon "Vanguard"</span>
+            </div>
+            <span class="text-[10px] text-slate-400">HQ GRID: 34U ED 4821</span>
+          </div>
+
+          <div id="platoon-1-content" class="p-2 space-y-2">
+            
+            <!-- Squad 1-Alpha -->
+            <div class="pl-2 border-l-2 border-tcyan/40 space-y-1.5">
+              <div class="font-mono text-[11px] font-semibold text-slate-200 flex items-center justify-between">
+                <span>Squad 1-Alpha (Assault)</span>
+                <span class="text-[9px] text-tgreen bg-green-950/60 px-1 rounded border border-green-800">GREEN VITAL</span>
+              </div>
+
+              <!-- Operator Cards -->
+              <!-- Operator 1: K. Adams -->
+              <div class="p-2 rounded bg-slate-950 border border-slate-800 hover:border-tcyan/50 transition cursor-pointer" onclick="focusOperator('KAdams')">
+                <div class="flex items-center justify-between mb-1">
+                  <div class="flex items-center space-x-1.5">
+                    <span class="w-2 h-2 rounded-full bg-tgreen animate-pulse"></span>
+                    <span class="font-mono font-bold text-slate-100">Alpha Lead (K. Adams)</span>
+                  </div>
+                  <span class="text-[10px] font-mono text-tcyan">CAM-01</span>
+                </div>
+                <div class="grid grid-cols-3 gap-1 text-[10px] font-mono text-slate-400">
+                  <div>HR: <span class="text-tgreen font-bold" id="hr-KAdams">82</span> bpm</div>
+                  <div>Ammo: <span class="text-slate-200">120/120</span></div>
+                  <div>Armor: <span class="text-tgreen">100%</span></div>
+                </div>
+              </div>
+
+              <!-- Operator 2: L. Marshall -->
+              <div class="p-2 rounded bg-slate-950 border border-slate-800 hover:border-tcyan/50 transition cursor-pointer" onclick="focusOperator('LMarshall')">
+                <div class="flex items-center justify-between mb-1">
+                  <div class="flex items-center space-x-1.5">
+                    <span class="w-2 h-2 rounded-full bg-tamber animate-pulse"></span>
+                    <span class="font-mono font-bold text-slate-100">Rifleman (L. Marshall)</span>
+                  </div>
+                  <span class="text-[10px] font-mono text-tamber">CAM-02</span>
+                </div>
+                <div class="grid grid-cols-3 gap-1 text-[10px] font-mono text-slate-400">
+                  <div>HR: <span class="text-tamber font-bold" id="hr-LMarshall">118</span> bpm</div>
+                  <div>Ammo: <span class="text-tamber">45/120</span></div>
+                  <div>Armor: <span class="text-tgreen">90%</span></div>
+                </div>
+              </div>
+
+              <!-- Operator 3: M. Lawson -->
+              <div class="p-2 rounded bg-slate-950 border border-slate-800 hover:border-tcyan/50 transition cursor-pointer" onclick="focusOperator('MLawson')">
+                <div class="flex items-center justify-between mb-1">
+                  <div class="flex items-center space-x-1.5">
+                    <span class="w-2 h-2 rounded-full bg-tgreen animate-pulse"></span>
+                    <span class="font-mono font-bold text-slate-100">Auto Rifle (M. Lawson)</span>
+                  </div>
+                  <span class="text-[10px] font-mono text-tcyan">CAM-03</span>
+                </div>
+                <div class="grid grid-cols-3 gap-1 text-[10px] font-mono text-slate-400">
+                  <div>HR: <span class="text-tgreen font-bold" id="hr-MLawson">76</span> bpm</div>
+                  <div>Ammo: <span class="text-slate-200">200/200</span></div>
+                  <div>Armor: <span class="text-tgreen">95%</span></div>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+
+        <!-- MISSION OBJECTIVES TRACKER -->
+        <div class="border border-slate-700/60 rounded bg-slate-900/50 p-2 space-y-2">
+          <div class="font-mono text-xs font-bold text-tamber flex items-center justify-between">
+            <span class="flex items-center gap-1.5"><i data-lucide="target" class="w-3.5 h-3.5"></i> Mission Objectives</span>
+            <span class="text-[10px] text-tamber bg-amber-950/60 px-1.5 py-0.5 rounded border border-amber-800 font-bold">2/3 DONE</span>
+          </div>
+
+          <div class="space-y-1.5 text-[11px]">
+            <div class="flex items-center justify-between p-1.5 rounded bg-slate-950 border border-green-900/60">
+              <span class="text-slate-200 flex items-center gap-1.5">
+                <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-tgreen"></i> 1. Secure FOB Alpha Corridor
+              </span>
+              <span class="text-[9px] font-mono text-tgreen font-bold">100%</span>
+            </div>
+
+            <div class="flex items-center justify-between p-1.5 rounded bg-slate-950 border border-cyan-900/60">
+              <span class="text-slate-200 flex items-center gap-1.5">
+                <i data-lucide="clock" class="w-3.5 h-3.5 text-tcyan animate-spin"></i> 2. Neutralize Radar & EW Facility
+              </span>
+              <span class="text-[9px] font-mono text-tcyan font-bold">65%</span>
+            </div>
+
+            <div class="flex items-center justify-between p-1.5 rounded bg-slate-950 border border-slate-800 opacity-70">
+              <span class="text-slate-400 flex items-center gap-1.5">
+                <i data-lucide="circle" class="w-3.5 h-3.5 text-slate-500"></i> 3. Exfiltrate VIP Team
+              </span>
+              <span class="text-[9px] font-mono text-slate-500">0%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- SPECTRUM & COMMS STATUS WIDGET -->
+        <div class="border border-slate-700/60 rounded bg-slate-900/50 p-2 space-y-1.5">
+          <div class="font-mono text-xs font-bold text-slate-300 flex items-center justify-between">
+            <span class="flex items-center gap-1.5"><i data-lucide="radio" class="w-3.5 h-3.5 text-tcyan"></i> Comms Telemetry</span>
+            <span id="comms-badge" class="text-[9px] font-mono text-tgreen bg-green-950/60 px-1.5 py-0.5 rounded border border-green-800 font-bold">NOMINAL</span>
+          </div>
+
+          <div class="space-y-1 text-[10px] font-mono">
+            <div class="flex justify-between text-slate-400">
+              <span>Latency Lag:</span>
+              <span id="telemetry-lag" class="text-tgreen font-bold">+12 ms</span>
+            </div>
+            <div class="w-full bg-slate-800 h-1.5 rounded overflow-hidden">
+              <div id="telemetry-bar" class="bg-tgreen h-full transition-all duration-500" style="width: 15%;"></div>
+            </div>
+            <div class="flex justify-between text-slate-400">
+              <span>Packet Loss:</span>
+              <span id="telemetry-loss" class="text-slate-200">0.2%</span>
+            </div>
+            <div class="flex justify-between text-slate-400">
+              <span>EW Spectrum Noise:</span>
+              <span id="telemetry-noise" class="text-slate-200">-104 dBm</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </aside>
+
+    <!-- CENTER PANEL: INTERACTIVE MULTI-DOMAIN GIS MAP CANVAS -->
+    <section class="flex-1 flex flex-col bg-c2dark relative overflow-hidden">
+
+      <!-- Map Toolbar & Multi-Domain Layer Toggles -->
+      <div class="absolute top-3 left-3 z-20 flex items-center space-x-2 bg-c2panel/90 backdrop-blur border border-c2border p-1.5 rounded-lg shadow-2xl">
+        <span class="text-[10px] font-mono text-slate-400 px-2 font-bold uppercase tracking-wider border-r border-slate-700">Domain Layers</span>
+        
+        <button id="layer-land" onclick="toggleDomainLayer('land')" class="px-2.5 py-1 rounded text-xs font-mono font-bold bg-tcyan/20 text-tcyan border border-tcyan/50 flex items-center gap-1 shadow-[0_0_8px_rgba(0,240,255,0.2)]">
+          <i data-lucide="shield" class="w-3.5 h-3.5"></i> Land
+        </button>
+
+        <button id="layer-air" onclick="toggleDomainLayer('air')" class="px-2.5 py-1 rounded text-xs font-mono font-bold bg-slate-800 text-slate-300 border border-slate-700 hover:text-white flex items-center gap-1">
+          <i data-lucide="plane" class="w-3.5 h-3.5"></i> Air
+        </button>
+
+        <button id="layer-cyber" onclick="toggleDomainLayer('cyber')" class="px-2.5 py-1 rounded text-xs font-mono font-bold bg-slate-800 text-slate-300 border border-slate-700 hover:text-white flex items-center gap-1">
+          <i data-lucide="cpu" class="w-3.5 h-3.5"></i> Cyber
+        </button>
+
+        <button id="layer-ew" onclick="toggleDomainLayer('ew')" class="px-2.5 py-1 rounded text-xs font-mono font-bold bg-slate-800 text-slate-300 border border-slate-700 hover:text-white flex items-center gap-1">
+          <i data-lucide="wifi-off" class="w-3.5 h-3.5"></i> EW Spectrum
+        </button>
+      </div>
+
+      <!-- Map Controls Overlay (Right Top) -->
+      <div class="absolute top-3 right-3 z-20 flex items-center space-x-2 bg-c2panel/90 backdrop-blur border border-c2border p-1.5 rounded-lg shadow-2xl text-xs font-mono">
+        <button onclick="mapZoomIn()" class="p-1.5 bg-slate-800 border border-slate-700 rounded text-slate-200 hover:text-tcyan" title="Zoom In">
+          <i data-lucide="plus" class="w-4 h-4"></i>
+        </button>
+        <button onclick="mapZoomOut()" class="p-1.5 bg-slate-800 border border-slate-700 rounded text-slate-200 hover:text-tcyan" title="Zoom Out">
+          <i data-lucide="minus" class="w-4 h-4"></i>
+        </button>
+        <button onclick="resetMapView()" class="px-2 py-1 bg-slate-800 border border-slate-700 rounded text-slate-200 hover:text-tcyan" title="Reset Map View">
+          Reset View
+        </button>
+        <div class="h-4 w-px bg-slate-700"></div>
+        <button id="btn-measure" onclick="toggleMapMeasure()" class="px-2 py-1 bg-slate-800 border border-slate-700 rounded text-slate-300 hover:text-tcyan flex items-center gap-1">
+          <i data-lucide="ruler" class="w-3.5 h-3.5"></i> Measure
+        </button>
+      </div>
+
+      <!-- Canvas Interactive Tactical Map -->
+      <div class="flex-1 relative w-full h-full bg-grid-pattern cursor-crosshair">
+        <canvas id="map-canvas" class="w-full h-full block"></canvas>
+
+        <!-- Map Coordinate Readout Footer Overlay -->
+        <div class="absolute bottom-2 left-3 z-20 font-mono text-[10px] text-slate-400 bg-c2panel/90 border border-slate-800 px-3 py-1 rounded flex items-center space-x-4">
+          <div>MGRS: <span id="map-mgrs" class="text-tcyan font-bold">34U ED 4829 9120</span></div>
+          <div>ELEV: <span class="text-slate-200">420m</span></div>
+          <div>TARGET DIST: <span id="map-dist" class="text-tamber font-bold">1.42 km</span></div>
+          <div>ACTIVE DOMAIN: <span id="map-domain-label" class="text-tcyan font-bold">LAND + AIR + CYBER + EW</span></div>
+        </div>
+      </div>
+
+      <!-- BOTTOM TIMELINE ANALYTICS DRAWER -->
+      <div class="h-44 bg-c2panel/95 border-t border-c2border flex flex-col z-20">
+        <div class="px-3 py-1.5 bg-slate-900 border-b border-c2border flex items-center justify-between text-xs font-mono">
+          <div class="flex items-center space-x-3">
+            <span class="font-bold text-slate-200 flex items-center gap-1.5">
+              <i data-lucide="activity" class="w-4 h-4 text-tcyan"></i> Scenario Event & Comms Degradation Timeline
+            </span>
+            <span class="text-[10px] text-slate-400">(Live Tracking of Latency, Injects, Objectives & Squad Stress)</span>
+          </div>
+
+          <div class="flex items-center space-x-4 text-[10px]">
+            <span class="flex items-center gap-1 text-tcyan"><span class="w-2 h-2 rounded-full bg-tcyan"></span> Latency Lag (ms)</span>
+            <span class="flex items-center gap-1 text-tamber"><span class="w-2 h-2 rounded-full bg-tamber"></span> EW Noise (dBm)</span>
+            <span class="flex items-center gap-1 text-tgreen"><span class="w-2 h-2 rounded-full bg-tgreen"></span> Objective %</span>
+            <span class="flex items-center gap-1 text-tred"><span class="w-2 h-2 rounded-full bg-tred"></span> Casualty Index</span>
+          </div>
+        </div>
+
+        <div class="flex-1 p-2 relative">
+          <canvas id="timeline-chart" class="w-full h-full"></canvas>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- RIGHT PANEL: LIVE SUB-UNIT VIDEO FEEDS (2x3 GRID) -->
+    <aside class="w-[420px] bg-c2panel/95 border-l border-c2border flex flex-col z-20 shadow-xl relative">
+      
+      <!-- Panel Header -->
+      <div class="px-3 py-2 bg-slate-900 border-b border-c2border flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <i data-lucide="video" class="w-4 h-4 text-tcyan"></i>
+          <span class="text-xs font-mono font-bold uppercase tracking-wider text-slate-200">Sub-Unit Tactical Camera Feeds</span>
+        </div>
+        <span class="text-[10px] font-mono text-tgreen bg-green-950 px-1.5 py-0.5 rounded border border-green-800">6 LIVE CAMERAS</span>
+      </div>
+
+      <!-- Prominent Warning Banner for Comms Degradation / Jitter -->
+      <div id="comms-warning-banner" class="hidden bg-red-950/90 border-b border-red-700/80 px-3 py-2 text-red-200 flex items-center justify-between animate-pulse">
+        <div class="flex items-center space-x-2">
+          <i data-lucide="alert-triangle" class="w-5 h-5 text-tred glow-red"></i>
+          <div>
+            <div class="font-mono text-xs font-bold text-red-100 uppercase tracking-wider">CRITICAL EW / COMMS DEGRADED</div>
+            <div class="text-[10px] text-red-300 font-mono" id="warning-banner-text">Packet Lag +45s | 4 Camera Streams Severed</div>
+          </div>
+        </div>
+        <button onclick="overrideCommsSync()" class="px-2 py-1 bg-red-900 hover:bg-red-800 text-white rounded text-[10px] font-mono border border-red-500">
+          RE-SYNC SIGNAL
+        </button>
+      </div>
+
+      <!-- 2x3 Grid Container -->
+      <div class="flex-1 grid grid-cols-2 grid-rows-3 gap-2 p-2 overflow-y-auto">
+
+        <!-- Cam Feed 1: KAdams (Alpha Lead) -->
+        <div class="hud-box hud-corner-tl rounded overflow-hidden flex flex-col relative group scanlines">
+          <div class="absolute top-1 left-1.5 z-10 font-mono text-[9px] text-tcyan bg-slate-950/80 px-1.5 py-0.5 rounded border border-tcyan/40 flex items-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-tgreen animate-pulse"></span> CAM-01 // K. ADAMS
+          </div>
+          <div class="absolute top-1 right-1.5 z-10 font-mono text-[9px] text-slate-400 bg-slate-950/80 px-1 py-0.5 rounded">
+            OPTICAL 1080P
+          </div>
+          <canvas id="feed-canvas-1" class="w-full flex-1 bg-slate-950 block"></canvas>
+          <div id="feed-overlay-1" class="absolute inset-0 bg-red-950/90 hidden flex-col items-center justify-center text-center p-2 z-20 backdrop-blur-sm">
+            <i data-lucide="wifi-off" class="w-6 h-6 text-tred mb-1 animate-pulse"></i>
+            <span class="font-mono text-[10px] font-bold text-red-200">SIGNAL LOST / EW JAMMED</span>
+            <span class="text-[9px] font-mono text-red-400 mt-1">LAG: +65s | FREQ 4.2 GHz NOISE</span>
+          </div>
+        </div>
+
+        <!-- Cam Feed 2: LMarshall (Rifleman) -->
+        <div class="hud-box hud-corner-tl rounded overflow-hidden flex flex-col relative group scanlines">
+          <div class="absolute top-1 left-1.5 z-10 font-mono text-[9px] text-tamber bg-slate-950/80 px-1.5 py-0.5 rounded border border-tamber/40 flex items-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-tamber animate-pulse"></span> CAM-02 // L. MARSHALL
+          </div>
+          <div class="absolute top-1 right-1.5 z-10 font-mono text-[9px] text-slate-400 bg-slate-950/80 px-1 py-0.5 rounded">
+            HELMET NVG
+          </div>
+          <canvas id="feed-canvas-2" class="w-full flex-1 bg-slate-950 block"></canvas>
+          <div id="feed-overlay-2" class="absolute inset-0 bg-slate-950/90 hidden flex-col items-center justify-center text-center p-2 z-20 backdrop-blur-sm">
+            <i data-lucide="refresh-cw" class="w-6 h-6 text-tamber mb-1 animate-spin"></i>
+            <span class="font-mono text-[10px] font-bold text-tamber">COMMS JITTER / RE-BUFFERING</span>
+            <span class="text-[9px] font-mono text-slate-400 mt-1">FRAME DROPS: 64%</span>
+          </div>
+        </div>
+
+        <!-- Cam Feed 3: MLawson (Automatic Rifleman) -->
+        <div class="hud-box hud-corner-tl rounded overflow-hidden flex flex-col relative group scanlines">
+          <div class="absolute top-1 left-1.5 z-10 font-mono text-[9px] text-tcyan bg-slate-950/80 px-1.5 py-0.5 rounded border border-tcyan/40 flex items-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-tgreen animate-pulse"></span> CAM-03 // M. LAWSON
+          </div>
+          <div class="absolute top-1 right-1.5 z-10 font-mono text-[9px] text-slate-400 bg-slate-950/80 px-1 py-0.5 rounded">
+            FLIR THERMAL
+          </div>
+          <canvas id="feed-canvas-3" class="w-full flex-1 bg-slate-950 block"></canvas>
+          <div id="feed-overlay-3" class="absolute inset-0 bg-red-950/90 hidden flex-col items-center justify-center text-center p-2 z-20 backdrop-blur-sm">
+            <i data-lucide="wifi-off" class="w-6 h-6 text-tred mb-1 animate-pulse"></i>
+            <span class="font-mono text-[10px] font-bold text-red-200">PACKET LOSS 92%</span>
+          </div>
+        </div>
+
+        <!-- Cam Feed 4: First Room (CQB Breach) -->
+        <div class="hud-box hud-corner-tl rounded overflow-hidden flex flex-col relative group scanlines">
+          <div class="absolute top-1 left-1.5 z-10 font-mono text-[9px] text-tcyan bg-slate-950/80 px-1.5 py-0.5 rounded border border-tcyan/40 flex items-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-tgreen animate-pulse"></span> CAM-04 // FIRST ROOM
+          </div>
+          <div class="absolute top-1 right-1.5 z-10 font-mono text-[9px] text-slate-400 bg-slate-950/80 px-1 py-0.5 rounded">
+            CQB CAM
+          </div>
+          <canvas id="feed-canvas-4" class="w-full flex-1 bg-slate-950 block"></canvas>
+          <div id="feed-overlay-4" class="absolute inset-0 bg-red-950/90 hidden flex-col items-center justify-center text-center p-2 z-20 backdrop-blur-sm">
+            <i data-lucide="wifi-off" class="w-6 h-6 text-tred mb-1 animate-pulse"></i>
+            <span class="font-mono text-[10px] font-bold text-red-200">BLACKOUT INJECTED</span>
+          </div>
+        </div>
+
+        <!-- Cam Feed 5: Second Room (Radar Control Node) -->
+        <div class="hud-box hud-corner-tl rounded overflow-hidden flex flex-col relative group scanlines">
+          <div class="absolute top-1 left-1.5 z-10 font-mono text-[9px] text-tcyan bg-slate-950/80 px-1.5 py-0.5 rounded border border-tcyan/40 flex items-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-tgreen animate-pulse"></span> CAM-05 // SECOND ROOM
+          </div>
+          <div class="absolute top-1 right-1.5 z-10 font-mono text-[9px] text-slate-400 bg-slate-950/80 px-1 py-0.5 rounded">
+            INTERIOR FLIR
+          </div>
+          <canvas id="feed-canvas-5" class="w-full flex-1 bg-slate-950 block"></canvas>
+          <div id="feed-overlay-5" class="absolute inset-0 bg-red-950/90 hidden flex-col items-center justify-center text-center p-2 z-20 backdrop-blur-sm">
+            <i data-lucide="wifi-off" class="w-6 h-6 text-tred mb-1 animate-pulse"></i>
+            <span class="font-mono text-[10px] font-bold text-red-200">SIGNAL SEVERED</span>
+          </div>
+        </div>
+
+        <!-- Cam Feed 6: Outside (Perimeter Overwatch) -->
+        <div class="hud-box hud-corner-tl rounded overflow-hidden flex flex-col relative group scanlines">
+          <div class="absolute top-1 left-1.5 z-10 font-mono text-[9px] text-tcyan bg-slate-950/80 px-1.5 py-0.5 rounded border border-tcyan/40 flex items-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-tgreen animate-pulse"></span> CAM-06 // OUTSIDE PERIMETER
+          </div>
+          <div class="absolute top-1 right-1.5 z-10 font-mono text-[9px] text-slate-400 bg-slate-950/80 px-1 py-0.5 rounded">
+            UAV REAPER CAM
+          </div>
+          <canvas id="feed-canvas-6" class="w-full flex-1 bg-slate-950 block"></canvas>
+          <div id="feed-overlay-6" class="absolute inset-0 bg-red-950/90 hidden flex-col items-center justify-center text-center p-2 z-20 backdrop-blur-sm">
+            <i data-lucide="wifi-off" class="w-6 h-6 text-tred mb-1 animate-pulse"></i>
+            <span class="font-mono text-[10px] font-bold text-red-200">UAV DATALINK LOST</span>
+          </div>
+        </div>
+
+      </div>
+    </aside>
+
+  </main>
+
+  <!-- MODAL 1: INSTRUCTOR SCENARIO ENGINE & COMMS DEGRADATION INJECTOR -->
+  <div id="instructor-modal" class="fixed inset-0 z-50 modal-backdrop hidden flex items-center justify-center p-4">
+    <div class="bg-c2panel border border-amber-500/60 rounded-xl w-full max-w-2xl shadow-[0_0_30px_rgba(245,158,11,0.2)] overflow-hidden flex flex-col hud-box hud-corner-tl">
+      <!-- Modal Header -->
+      <div class="bg-slate-900 px-4 py-3 border-b border-slate-800 flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <i data-lucide="zap" class="w-5 h-5 text-tamber"></i>
+          <h2 class="font-mono font-bold text-slate-100 text-sm tracking-wide">INSTRUCTOR SCENARIO ENGINE // EW & CYBER DEGRADATION INJECTOR</h2>
+        </div>
+        <button onclick="closeModal('instructor-modal')" class="text-slate-400 hover:text-white">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="p-4 space-y-4 text-xs">
+        
+        <!-- Inject 1: Communication Lag / Delay Slider -->
+        <div class="p-3 bg-slate-900/80 border border-slate-800 rounded space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="font-mono font-bold text-tamber flex items-center gap-1.5">
+              <i data-lucide="clock" class="w-4 h-4"></i> Communication Packet Lag & Latency Inject
+            </span>
+            <span id="slider-lag-val" class="font-mono text-sm font-bold text-tcyan">+0 seconds</span>
+          </div>
+          <input type="range" id="lag-slider" min="0" max="120" value="0" step="5" oninput="updateLagValue(this.value)" class="w-full">
+          <div class="flex justify-between font-mono text-[10px] text-slate-400">
+            <span>Nominal (0s)</span>
+            <span>+15s (Minor)</span>
+            <span>+45s (Severe)</span>
+            <span>+120s (Tactical Blackout)</span>
+          </div>
+        </div>
+
+        <!-- Inject 2: Signal Dropouts & Audio Severing -->
+        <div class="p-3 bg-slate-900/80 border border-slate-800 rounded space-y-2">
+          <span class="font-mono font-bold text-tred flex items-center gap-1.5">
+            <i data-lucide="wifi-off" class="w-4 h-4"></i> Selective Camera / Audio Signal Blackout
+          </span>
+          <div class="grid grid-cols-3 gap-2 pt-1 font-mono text-[11px]">
+            <button id="inj-cam-1" onclick="toggleFeedDropout(1)" class="p-2 bg-slate-800 border border-slate-700 rounded text-slate-300 hover:border-red-500">
+              CAM-01 (KAdams)
+            </button>
+            <button id="inj-cam-2" onclick="toggleFeedDropout(2)" class="p-2 bg-slate-800 border border-slate-700 rounded text-slate-300 hover:border-red-500">
+              CAM-02 (LMarshall)
+            </button>
+            <button id="inj-cam-3" onclick="toggleFeedDropout(3)" class="p-2 bg-slate-800 border border-slate-700 rounded text-slate-300 hover:border-red-500">
+              CAM-03 (MLawson)
+            </button>
+            <button id="inj-cam-4" onclick="toggleFeedDropout(4)" class="p-2 bg-slate-800 border border-slate-700 rounded text-slate-300 hover:border-red-500">
+              CAM-04 (First Room)
+            </button>
+            <button id="inj-cam-5" onclick="toggleFeedDropout(5)" class="p-2 bg-slate-800 border border-slate-700 rounded text-slate-300 hover:border-red-500">
+              CAM-05 (Second Room)
+            </button>
+            <button id="inj-cam-6" onclick="toggleFeedDropout(6)" class="p-2 bg-slate-800 border border-slate-700 rounded text-slate-300 hover:border-red-500">
+              CAM-06 (Outside)
+            </button>
+          </div>
+        </div>
+
+        <!-- Inject 3: Conflicting Intel Reports & GPS Spoofing -->
+        <div class="p-3 bg-slate-900/80 border border-slate-800 rounded space-y-2">
+          <span class="font-mono font-bold text-tpurple flex items-center gap-1.5">
+            <i data-lucide="help-circle" class="w-4 h-4"></i> Cyber & Deception Injects
+          </span>
+          <div class="flex space-x-2 font-mono">
+            <button onclick="injectConflictingIntel()" class="flex-1 py-2 bg-purple-950/70 border border-purple-600/60 rounded text-purple-200 hover:bg-purple-900 font-bold flex items-center justify-center gap-1.5">
+              <i data-lucide="alert-octagon" class="w-4 h-4"></i> Inject Phantom OPFOR Sighting
+            </button>
+            <button onclick="injectGpsSpoofing()" class="flex-1 py-2 bg-amber-950/70 border border-amber-600/60 rounded text-amber-200 hover:bg-amber-900 font-bold flex items-center justify-center gap-1.5">
+              <i data-lucide="compass" class="w-4 h-4"></i> Trigger GPS Drift / Spoofing
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="bg-slate-900 px-4 py-3 border-t border-slate-800 flex items-center justify-between">
+        <button onclick="resetAllInjects()" class="text-xs font-mono text-slate-400 hover:text-white underline">
+          Reset All EW Injects to Nominal
+        </button>
+        <button onclick="closeModal('instructor-modal')" class="px-4 py-1.5 bg-tamber text-slate-950 font-mono font-bold rounded hover:bg-amber-400 transition">
+          Apply Injects to Simulation
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 2: AI COA (COURSE OF ACTION) ASSISTANT PANEL -->
+  <div id="coa-modal" class="fixed inset-0 z-50 modal-backdrop hidden flex items-center justify-center p-4">
+    <div class="bg-c2panel border border-cyan-500/60 rounded-xl w-full max-w-4xl shadow-[0_0_40px_rgba(0,240,255,0.25)] overflow-hidden flex flex-col hud-box hud-corner-tl">
+      <!-- Modal Header -->
+      <div class="bg-slate-900 px-5 py-3.5 border-b border-slate-800 flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <i data-lucide="bot" class="w-5 h-5 text-tcyan"></i>
+          <div>
+            <h2 class="font-mono font-bold text-slate-100 text-sm tracking-wide">AI TACTICAL DECISION ASSISTANT (AIP C2 ENGINE)</h2>
+            <span class="text-[10px] font-mono text-slate-400">Evaluating Tactical Courses of Action under Comms Degradation</span>
+          </div>
+        </div>
+        <button onclick="closeModal('coa-modal')" class="text-slate-400 hover:text-white">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="p-5 space-y-4 text-xs overflow-y-auto max-h-[75vh]">
+        
+        <!-- AIP AI Insight Banner -->
+        <div class="p-3 bg-cyan-950/40 border border-cyan-500/40 rounded-lg flex items-start space-x-3">
+          <i data-lucide="sparkles" class="w-5 h-5 text-tcyan shrink-0 mt-0.5"></i>
+          <div class="space-y-1">
+            <div class="font-mono font-bold text-tcyan text-xs">AI DEFENSE SYNTHESIS // REAL-TIME RISK ANALYSIS</div>
+            <div class="text-slate-300 text-xs">
+              Enemy EW Jammer at GRID 34U ED 4910 is currently disrupting 75% of squad datalinks. 1st Platoon is 400m from target building. Select optimal Course of Action based on response velocity vs spectrum vulnerability.
+            </div>
+          </div>
+        </div>
+
+        <!-- COA Comparison Cards Grid (3 Columns) -->
+        <div class="grid grid-cols-3 gap-4">
+
+          <!-- COA 1: Air Strike -->
+          <div id="coa-card-1" class="border border-slate-700 bg-slate-900/90 rounded-lg p-4 space-y-3 flex flex-col justify-between hover:border-tcyan transition cursor-pointer" onclick="selectCOA(1)">
+            <div class="space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="font-mono font-bold text-tcyan text-sm">COA 1: CAS AIR STRIKE</span>
+                <span class="px-1.5 py-0.5 rounded text-[9px] font-mono bg-green-950 text-tgreen border border-green-800">88% CONF</span>
+              </div>
+              <div class="text-[11px] text-slate-300">
+                Dispatch F-35B Lightning / MQ-9 Reaper precision strike on EW Facility radar array.
+              </div>
+
+              <!-- Spec Matrix -->
+              <div class="space-y-1 pt-2 font-mono text-[10px] border-t border-slate-800">
+                <div class="flex justify-between">
+                  <span class="text-slate-400">Time Required:</span>
+                  <span class="text-tcyan font-bold">4 mins</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-slate-400">Target Range:</span>
+                  <span class="text-slate-200">12.5 km</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-slate-400">Fuel Level:</span>
+                  <span class="text-slate-200">42% (30 mins loiter)</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-slate-400">Personnel Risk:</span>
+                  <span class="text-tgreen font-bold">LOW (0 Ground Casualties)</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-slate-400">Spectrum Sensitivity:</span>
+                  <span class="text-tamber font-bold">MEDIUM (GPS Jamming Risk)</span>
+                </div>
+              </div>
+            </div>
+
+            <button onclick="executeCOA(1)" class="w-full py-2 bg-tcyan/20 text-tcyan border border-tcyan/50 hover:bg-tcyan/30 rounded font-mono font-bold text-xs transition mt-3">
+              EXECUTE COA 1
+            </button>
+          </div>
+
+          <!-- COA 2: HIMARS Artillery -->
+          <div id="coa-card-2" class="border border-slate-700 bg-slate-900/90 rounded-lg p-4 space-y-3 flex flex-col justify-between hover:border-tcyan transition cursor-pointer" onclick="selectCOA(2)">
+            <div class="space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="font-mono font-bold text-tamber text-sm">COA 2: HIMARS ROCKET</span>
+                <span class="px-1.5 py-0.5 rounded text-[9px] font-mono bg-amber-950 text-tamber border border-amber-800">76% CONF</span>
+              </div>
+              <div class="text-[11px] text-slate-300">
+                Launch M31 GMLRS rocket barrage from Battery Alpha to destroy radar facility node.
+              </div>
+
+              <!-- Spec Matrix -->
+              <div class="space-y-1 pt-2 font-mono text-[10px] border-t border-slate-800">
+                <div class="flex justify-between">
+                  <span class="text-slate-400">Time Required:</span>
+                  <span class="text-tamber font-bold">2 mins</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-slate-400">Target Range:</span>
+                  <span class="text-slate-200">32.0 km</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-slate-400">Ammo Reserve:</span>
+                  <span class="text-slate-200">6 Rockets Ready</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-slate-400">Personnel Risk:</span>
+                  <span class="text-tgreen font-bold">NONE (Remote Battery)</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-slate-400">Collateral Risk:</span>
+                  <span class="text-tred font-bold">HIGH (Adjacent Civ Structures)</span>
+                </div>
+              </div>
+            </div>
+
+            <button onclick="executeCOA(2)" class="w-full py-2 bg-tamber/20 text-tamber border border-tamber/50 hover:bg-tamber/30 rounded font-mono font-bold text-xs transition mt-3">
+              EXECUTE COA 2
+            </button>
+          </div>
+
+          <!-- COA 3: Tactical Team Infiltration -->
+          <div id="coa-card-3" class="border border-slate-700 bg-slate-900/90 rounded-lg p-4 space-y-3 flex flex-col justify-between hover:border-tcyan transition cursor-pointer" onclick="selectCOA(3)">
+            <div class="space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="font-mono font-bold text-tgreen text-sm">COA 3: SQUAD INFILTRATION</span>
+                <span class="px-1.5 py-0.5 rounded text-[9px] font-mono bg-cyan-950 text-tcyan border border-cyan-800">64% CONF</span>
+              </div>
+              <div class="text-[11px] text-slate-300">
+                Command 1st Platoon Squad 1-Alpha to perform manual CQB breach and explosive charge disable.
+              </div>
+
+              <!-- Spec Matrix -->
+              <div class="space-y-1 pt-2 font-mono text-[10px] border-t border-slate-800">
+                <div class="flex justify-between">
+                  <span class="text-slate-400">Time Required:</span>
+                  <span class="text-slate-200 font-bold">28 mins</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-slate-400">Target Distance:</span>
+                  <span class="text-slate-200">3.4 km</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-slate-400">Squad Status:</span>
+                  <span class="text-tgreen">100% Combat Effective</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-slate-400">Personnel Risk:</span>
+                  <span class="text-tred font-bold">HIGH (Direct Fire Contact)</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-slate-400">Spectrum Sensitivity:</span>
+                  <span class="text-tgreen font-bold">NONE (Comms Independent)</span>
+                </div>
+              </div>
+            </div>
+
+            <button onclick="executeCOA(3)" class="w-full py-2 bg-tgreen/20 text-tgreen border border-tgreen/50 hover:bg-tgreen/30 rounded font-mono font-bold text-xs transition mt-3">
+              EXECUTE COA 3
+            </button>
+          </div>
+
+        </div>
+
+        <!-- Commander Rationale Input -->
+        <div class="p-3 bg-slate-900 border border-slate-800 rounded-lg space-y-1.5">
+          <label class="font-mono text-xs font-bold text-slate-300 block">COMMANDER TACTICAL RATIONALE & JUSTIFICATION LOG:</label>
+          <textarea id="coa-rationale" rows="2" class="w-full bg-slate-950 border border-slate-700 rounded p-2 text-xs font-mono text-slate-200 focus:border-tcyan outline-none" placeholder="Enter tactical reasoning for chosen COA under degraded comms environment..."></textarea>
+        </div>
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="bg-slate-900 px-5 py-3 border-t border-slate-800 flex items-center justify-between font-mono text-xs">
+        <span class="text-slate-400">AIP Model Version: Tactical-V4.2 (Edge Deployed)</span>
+        <button onclick="closeModal('coa-modal')" class="px-4 py-1.5 bg-slate-800 text-slate-300 rounded hover:text-white">
+          Close Panel
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 3: AFTER ACTION REVIEW (AAR) REPORT & EXPORT -->
+  <div id="aar-modal" class="fixed inset-0 z-50 modal-backdrop hidden flex items-center justify-center p-4">
+    <div class="bg-c2panel border border-purple-500/60 rounded-xl w-full max-w-4xl shadow-[0_0_50px_rgba(139,92,246,0.3)] overflow-hidden flex flex-col hud-box hud-corner-tl max-h-[90vh]">
+      
+      <!-- Modal Header -->
+      <div class="bg-slate-900 px-5 py-3.5 border-b border-slate-800 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <div class="w-8 h-8 rounded bg-purple-950 border border-purple-500/60 flex items-center justify-center text-purple-300 font-bold font-mono">
+            AAR
+          </div>
+          <div>
+            <h2 class="font-mono font-bold text-slate-100 text-sm tracking-wide">AFTER ACTION REVIEW (AAR) DEBRIEF REPORT</h2>
+            <span class="text-[10px] font-mono text-purple-300">MINISTRY OF DEFENCE // ADAPTIVE C2 PERFORMANCE EVALUATION</span>
+          </div>
+        </div>
+        
+        <div class="flex items-center space-x-3">
+          <button onclick="exportAARPDF()" class="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded font-mono font-bold text-xs flex items-center gap-1.5 shadow-[0_0_12px_rgba(139,92,246,0.5)]">
+            <i data-lucide="download" class="w-4 h-4"></i> Export AAR PDF / Dossier
+          </button>
+          <button onclick="closeModal('aar-modal')" class="text-slate-400 hover:text-white">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Printable Dossier Area -->
+      <div id="aar-dossier-content" class="p-6 space-y-5 text-xs overflow-y-auto bg-c2dark">
+
+        <!-- Dossier Top Header Info -->
+        <div class="p-4 bg-slate-900 border border-slate-800 rounded-lg flex items-center justify-between font-mono">
+          <div class="space-y-1">
+            <div class="text-tcyan text-sm font-bold">OPERATION DESERT STORM // HYBRID EXERCISE</div>
+            <div class="text-slate-400 text-[11px]">Trainee ID: CDR-7842-UK | Unit: 1st Platoon "Vanguard"</div>
+            <div class="text-slate-400 text-[11px]">Date: 02 OCT 2026 | Simulation Duration: 04h 12m 45s</div>
+          </div>
+
+          <!-- Overall Performance Grade -->
+          <div class="text-center px-4 py-2 bg-slate-950 border border-purple-500/40 rounded-lg">
+            <div class="text-[10px] text-slate-400 uppercase">Overall C2 Score</div>
+            <div class="text-3xl font-black text-purple-400 glow-purple">A- (92%)</div>
+            <div class="text-[9px] text-tgreen">RECOMMENDED FOR COMBAT CERTIFICATION</div>
+          </div>
+        </div>
+
+        <!-- 3 Performance Metric Cards -->
+        <div class="grid grid-cols-3 gap-3 font-mono">
+          <div class="p-3 bg-slate-900 border border-slate-800 rounded space-y-1">
+            <div class="text-slate-400 text-[10px]">Decision Velocity under Lag</div>
+            <div class="text-lg font-bold text-tcyan">1m 42s avg</div>
+            <div class="text-[9px] text-tgreen">35% faster than benchmark</div>
+          </div>
+          <div class="p-3 bg-slate-900 border border-slate-800 rounded space-y-1">
+            <div class="text-slate-400 text-[10px]">Comms Blackout Adaptability</div>
+            <div class="text-lg font-bold text-tamber">94.5%</div>
+            <div class="text-[9px] text-tgreen">0 unauthorized unit losses</div>
+          </div>
+          <div class="p-3 bg-slate-900 border border-slate-800 rounded space-y-1">
+            <div class="text-slate-400 text-[10px]">Objective Completion Efficiency</div>
+            <div class="text-lg font-bold text-tgreen">2 / 3 Complete</div>
+            <div class="text-[9px] text-slate-300">EW Radar Node Neutralized</div>
+          </div>
+        </div>
+
+        <!-- Section: Decision Log & Rationale -->
+        <div class="space-y-2">
+          <h3 class="font-mono font-bold text-slate-200 text-xs flex items-center gap-2">
+            <i data-lucide="list" class="w-4 h-4 text-tcyan"></i> COMMANDER DECISION TIMELINE & EW INJECT RESPONSES
+          </h3>
+
+          <div class="border border-slate-800 rounded-lg overflow-hidden font-mono text-[11px]">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-slate-900 text-slate-400 border-b border-slate-800">
+                  <th class="p-2.5">TIMESTAMP</th>
+                  <th class="p-2.5">EVENT / EW INJECT</th>
+                  <th class="p-2.5">COMMANDER ACTION</th>
+                  <th class="p-2.5">LATENCY</th>
+                  <th class="p-2.5">OUTCOME</th>
+                </tr>
+              </thead>
+              <tbody id="aar-table-body" class="divide-y divide-slate-800/60 bg-slate-950/80">
+                <tr>
+                  <td class="p-2.5 text-tcyan font-bold">T+00:15:00</td>
+                  <td class="p-2.5 text-slate-300">Exercise Start & FOB Alpha Breach</td>
+                  <td class="p-2.5 text-slate-300">Ordered Squad 1-Alpha Advance</td>
+                  <td class="p-2.5 text-tgreen">+12ms</td>
+                  <td class="p-2.5 text-tgreen">SUCCESS (100%)</td>
+                </tr>
+                <tr>
+                  <td class="p-2.5 text-tamber font-bold">T+01:45:20</td>
+                  <td class="p-2.5 text-tamber">EW Jamming Dome Activated (+45s Lag)</td>
+                  <td class="p-2.5 text-slate-300">Switched to Mesh Relay Protocol</td>
+                  <td class="p-2.5 text-tamber">+45s</td>
+                  <td class="p-2.5 text-tgreen">COMMS MAINTAINED</td>
+                </tr>
+                <tr>
+                  <td class="p-2.5 text-tcyan font-bold">T+03:10:12</td>
+                  <td class="p-2.5 text-purple-300">Conflicting Phantom OPFOR Sightings</td>
+                  <td class="p-2.5 text-slate-300">Cross-verified via FLIR UAV Recon</td>
+                  <td class="p-2.5 text-tgreen">+18s</td>
+                  <td class="p-2.5 text-tgreen">DECEPTION DISPROVED</td>
+                </tr>
+                <tr>
+                  <td class="p-2.5 text-tcyan font-bold">T+04:02:00</td>
+                  <td class="p-2.5 text-tcyan">Executed COA 1 (CAS F-35 Strike)</td>
+                  <td class="p-2.5 text-slate-300">Air Strike on Radar EW Generator</td>
+                  <td class="p-2.5 text-tgreen">+4s</td>
+                  <td class="p-2.5 text-tgreen font-bold">TARGET DESTROYED</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Section: Instructor Assessment Notes -->
+        <div class="p-3 bg-slate-900 border border-slate-800 rounded-lg space-y-1 font-mono">
+          <div class="text-tamber font-bold text-xs">SENIOR INSTRUCTOR EVALUATION & RECOMMENDATIONS:</div>
+          <p class="text-slate-300 text-[11px] leading-relaxed">
+            The commander demonstrated exceptional tactical poise during period of 75% video blackout. By relying on acoustic sensors and pre-arranged SOPs rather than panicking, the unit preserved combat power and successfully neutralized the primary EW target.
+          </p>
+        </div>
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="bg-slate-900 px-5 py-3 border-t border-slate-800 flex items-center justify-between font-mono text-xs">
+        <span class="text-slate-400">Classification: RESTRICTED // NATO EXERCISE OFFICIAL RECORD</span>
+        <button onclick="closeModal('aar-modal')" class="px-4 py-1.5 bg-slate-800 text-slate-300 rounded hover:text-white">
+          Close Report
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN JS APP ENGINE -->
+  <script src="app.js"></script>
+  <script>
+    // Initialize Lucide icons
+    lucide.createIcons();
+  </script>
+</body>
+</html>
