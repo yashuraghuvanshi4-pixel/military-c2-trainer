@@ -131,14 +131,21 @@ function playAlertSound() {
 // ==========================================
 // 2. LEAFLET GOOGLE MAPS GIS INTEGRATION
 // ==========================================
+// ==========================================
+// 2. LIVE GOOGLE LOCATION MAP & GEOLOCATION INTEGRATION
+// ==========================================
 function initLeafletMap() {
   if (state.leafletMap) return;
   const mapContainer = document.getElementById('leaflet-map');
   if (!mapContainer) return;
 
+  // Default initial coordinates (fallback to London / Global hub before Live GPS locks)
+  const defaultLat = 51.5074;
+  const defaultLon = -0.1278;
+
   state.leafletMap = L.map('leaflet-map', {
-    center: [29.3759, 47.9774],
-    zoom: 13,
+    center: [defaultLat, defaultLon],
+    zoom: 14,
     zoomControl: false,
     attributionControl: false
   });
@@ -148,11 +155,153 @@ function initLeafletMap() {
     maxZoom: 20,
     subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
   }).addTo(state.leafletMap);
+
+  // Synchronize Leaflet Mouse Position with HUD Footer Telemetry
+  state.leafletMap.on('mousemove', (e) => {
+    const lat = e.latlng.lat;
+    const lng = e.latlng.lng;
+    const latStr = `${Math.abs(lat).toFixed(4)}°${lat >= 0 ? 'N' : 'S'}`;
+    const lonStr = `${Math.abs(lng).toFixed(4)}°${lng >= 0 ? 'E' : 'W'}`;
+    const latlonElem = document.getElementById('map-latlon');
+    if (latlonElem) latlonElem.innerText = `${latStr} ${lonStr}`;
+
+    const mgrsE = String(Math.floor(Math.abs(lng * 1000) % 10000)).padStart(4, '0');
+    const mgrsN = String(Math.floor(Math.abs(lat * 1000) % 10000)).padStart(4, '0');
+    const mgrsElem = document.getElementById('map-mgrs');
+    if (mgrsElem) mgrsElem.innerText = `GRID ${mgrsE} ${mgrsN}`;
+  });
+
+  // Attempt Immediate Live Geolocation Lock
+  locateUserLivePosition(true);
+
+  // Watch position for continuous real-time live location updates
+  if (navigator.geolocation) {
+    navigator.geolocation.watchPosition(
+      (pos) => {
+        state.liveLat = pos.coords.latitude;
+        state.liveLon = pos.coords.longitude;
+        state.liveAccuracy = pos.coords.accuracy;
+        updateUserLocationMarker(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy);
+      },
+      (err) => { console.warn("GPS Watch Position Warning:", err.message); },
+      { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 }
+    );
+  }
+}
+
+function locateUserLivePosition(isInitial = false) {
+  if (!navigator.geolocation) {
+    if (!isInitial) alert("Geolocation is not supported by your browser.");
+    return;
+  }
+
+  const locateBtn = document.getElementById('btn-locate-me');
+  if (locateBtn) locateBtn.classList.add('animate-pulse');
+
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      const lat = pos.coords.latitude;
+      const lon = pos.coords.longitude;
+      const accuracy = pos.coords.accuracy;
+
+      state.liveLat = lat;
+      state.liveLon = lon;
+      state.liveAccuracy = accuracy;
+
+      if (state.leafletMap) {
+        state.leafletMap.flyTo([lat, lon], 16, { animate: true, duration: 1.5 });
+        updateUserLocationMarker(lat, lon, accuracy);
+      }
+
+      playAlertSound();
+      if (!isInitial) {
+        alert(`📍 LIVE GPS LOCKED: ${lat.toFixed(4)}° N, ${lon.toFixed(4)}° E (±${Math.round(accuracy)}m accuracy)`);
+      }
+    },
+    (err) => {
+      console.warn("Live Geolocation Permission/Timeout:", err);
+      if (!isInitial) {
+        alert("Could not retrieve live GPS location. Please check browser location permissions or try searching a location in the search bar!");
+      }
+    },
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+  );
+}
+
+function updateUserLocationMarker(lat, lon, accuracy) {
+  if (!state.leafletMap) return;
+
+  if (state.userLocationMarker) {
+    state.userLocationMarker.setLatLng([lat, lon]);
+  } else {
+    // Tactical Glowing Custom Marker Icon
+    const customIcon = L.divIcon({
+      className: 'custom-live-marker',
+      html: `
+        <div class="relative flex items-center justify-center w-8 h-8">
+          <div class="absolute w-8 h-8 bg-emerald-500/30 rounded-full animate-ping"></div>
+          <div class="relative w-5 h-5 bg-emerald-500 border-2 border-white rounded-full shadow-[0_0_15px_#10B981] flex items-center justify-center text-[8px] font-bold text-black">HQ</div>
+        </div>
+      `,
+      iconSize: [32, 32],
+      iconAnchor: [16, 16]
+    });
+
+    state.userLocationMarker = L.marker([lat, lon], { icon: customIcon }).addTo(state.leafletMap);
+    state.userLocationMarker.bindPopup(`<div class="font-mono text-xs font-bold text-tgreen">🟢 YOUR LIVE COMMAND NODE<br>LAT: ${lat.toFixed(4)}° | LON: ${lon.toFixed(4)}°</div>`);
+  }
+
+  if (state.userAccuracyCircle) {
+    state.userAccuracyCircle.setLatLng([lat, lon]);
+    state.userAccuracyCircle.setRadius(accuracy || 50);
+  } else {
+    state.userAccuracyCircle = L.circle([lat, lon], {
+      radius: accuracy || 50,
+      color: '#10B981',
+      fillColor: '#10B981',
+      fillOpacity: 0.15,
+      weight: 1.5
+    }).addTo(state.leafletMap);
+  }
+}
+
+async function searchLocationOnMap() {
+  const inputElem = document.getElementById('map-search-input');
+  if (!inputElem || !inputElem.value.trim()) return;
+
+  const query = inputElem.value.trim();
+  try {
+    playBeep(1100, 'sine', 0.05);
+    const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`);
+    const data = await response.json();
+
+    if (data && data.length > 0) {
+      const result = data[0];
+      const lat = parseFloat(result.lat);
+      const lon = parseFloat(result.lon);
+
+      if (state.leafletMap) {
+        state.leafletMap.flyTo([lat, lon], 14, { animate: true, duration: 1.5 });
+
+        // Add Search Result Marker
+        L.popup()
+          .setLatLng([lat, lon])
+          .setContent(`<div class="font-mono text-xs font-bold text-tcyan">🎯 SEARCHED LOCATION:<br>${result.display_name}</div>`)
+          .openOn(state.leafletMap);
+      }
+      playAlertSound();
+    } else {
+      alert(`Location "${query}" not found. Try searching with city or landmark name!`);
+    }
+  } catch (err) {
+    console.error("Geocoding fetch error:", err);
+    alert("Error searching location. Please check your network connection.");
+  }
 }
 
 function switchMapStyle(style) {
   state.mapStyle = style;
-  ['map-style-sat', 'map-style-hybrid', 'map-style-dark'].forEach(id => {
+  ['map-style-sat', 'map-style-hybrid', 'map-style-roadmap', 'map-style-terrain'].forEach(id => {
     const btn = document.getElementById(id);
     if (btn) btn.className = "px-2.5 py-1 rounded text-xs font-mono font-bold bg-slate-800 text-slate-300 border border-slate-700 hover:text-white flex items-center gap-1";
   });
@@ -172,9 +321,13 @@ function switchMapStyle(style) {
     state.leafletTileLayer = L.tileLayer('https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
       maxZoom: 20, subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
     }).addTo(state.leafletMap);
-  } else {
-    state.leafletTileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      maxZoom: 19
+  } else if (style === 'roadmap') {
+    state.leafletTileLayer = L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+      maxZoom: 20, subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
+    }).addTo(state.leafletMap);
+  } else if (style === 'terrain') {
+    state.leafletTileLayer = L.tileLayer('https://{s}.google.com/vt/lyrs=p&x={x}&y={y}&z={z}', {
+      maxZoom: 20, subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
     }).addTo(state.leafletMap);
   }
 

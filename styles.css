@@ -140,6 +140,23 @@ body {
   filter: contrast(140%) hue-rotate(90deg) brightness(80%);
 }
 
+/* Tactical Leaflet Popup & Marker Styling */
+.leaflet-popup-content-wrapper, .leaflet-popup-tip {
+  background: #090e17 !important;
+  color: #f1f5f9 !important;
+  border: 1px solid rgba(0, 240, 255, 0.4) !important;
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.2) !important;
+  border-radius: 6px !important;
+}
+.leaflet-container {
+  background: #04070c !important;
+  font-family: 'JetBrains Mono', monospace !important;
+}
+.custom-live-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
 .modal-backdrop {
   background: rgba(4, 7, 13, 0.88);
   backdrop-filter: blur(14px);

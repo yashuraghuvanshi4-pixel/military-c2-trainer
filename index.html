@@ -352,34 +352,60 @@
         </div>
       </div>
 
-      <!-- Map Layer & Google Tile Switcher Toolbar -->
-      <div class="absolute top-12 left-3 z-20 flex items-center space-x-2 bg-c2panel/90 backdrop-blur border border-c2border p-1.5 rounded-lg shadow-2xl">
-        <span class="text-[10px] font-mono text-slate-400 px-2 font-bold uppercase tracking-wider border-r border-slate-700">Map Mode</span>
-        
-        <button id="map-style-sat" onclick="switchMapStyle('satellite')" class="px-2.5 py-1 rounded text-xs font-mono font-bold bg-tcyan/20 text-tcyan border border-tcyan/50 flex items-center gap-1 shadow-[0_0_8px_rgba(0,240,255,0.2)]">
-          <i data-lucide="globe" class="w-3.5 h-3.5"></i> Google Satellite
-        </button>
+      <!-- Map Layer & Google Live Location Switcher Toolbar -->
+      <div class="absolute top-12 left-3 z-20 flex flex-col space-y-2">
+        <!-- Main Map Layer Controls -->
+        <div class="flex items-center space-x-2 bg-c2panel/95 backdrop-blur border border-c2border p-1.5 rounded-lg shadow-2xl">
+          <!-- Live GPS Locate Me Button -->
+          <button id="btn-locate-me" onclick="locateUserLivePosition()" class="px-2.5 py-1 rounded text-xs font-mono font-bold bg-emerald-950/80 text-tgreen border border-emerald-500/50 hover:bg-emerald-900 flex items-center gap-1.5 shadow-[0_0_10px_rgba(16,185,129,0.3)] transition animate-pulse" title="Center map on your real live location">
+            <i data-lucide="crosshair" class="w-3.5 h-3.5 text-tgreen"></i> <span>Locate Me (Live GPS)</span>
+          </button>
 
-        <button id="map-style-hybrid" onclick="switchMapStyle('hybrid')" class="px-2.5 py-1 rounded text-xs font-mono font-bold bg-slate-800 text-slate-300 border border-slate-700 hover:text-white flex items-center gap-1">
-          <i data-lucide="map" class="w-3.5 h-3.5"></i> Google Hybrid
-        </button>
+          <div class="h-4 w-px bg-slate-700"></div>
 
-        <button id="map-style-dark" onclick="switchMapStyle('dark')" class="px-2.5 py-1 rounded text-xs font-mono font-bold bg-slate-800 text-slate-300 border border-slate-700 hover:text-white flex items-center gap-1">
-          <i data-lucide="layers" class="w-3.5 h-3.5"></i> Vector Dark
-        </button>
+          <span class="text-[10px] font-mono text-slate-400 px-1 font-bold uppercase tracking-wider">Google Map</span>
+          
+          <button id="map-style-sat" onclick="switchMapStyle('satellite')" class="px-2.5 py-1 rounded text-xs font-mono font-bold bg-tcyan/20 text-tcyan border border-tcyan/50 flex items-center gap-1 shadow-[0_0_8px_rgba(0,240,255,0.2)]">
+            <i data-lucide="globe" class="w-3.5 h-3.5"></i> Google Satellite
+          </button>
 
-        <div class="h-4 w-px bg-slate-700"></div>
+          <button id="map-style-hybrid" onclick="switchMapStyle('hybrid')" class="px-2.5 py-1 rounded text-xs font-mono font-bold bg-slate-800 text-slate-300 border border-slate-700 hover:text-white flex items-center gap-1">
+            <i data-lucide="map" class="w-3.5 h-3.5"></i> Google Hybrid
+          </button>
 
-        <button id="layer-land" onclick="toggleDomainLayer('land')" class="px-2.5 py-1 rounded text-xs font-mono font-bold bg-tcyan/20 text-tcyan border border-tcyan/50 flex items-center gap-1">
-          <i data-lucide="shield" class="w-3.5 h-3.5"></i> Land
-        </button>
-        <button id="layer-air" onclick="toggleDomainLayer('air')" class="px-2.5 py-1 rounded text-xs font-mono font-bold bg-slate-800 text-slate-300 border border-slate-700 hover:text-white flex items-center gap-1">
-          <i data-lucide="plane" class="w-3.5 h-3.5"></i> Air
-        </button>
+          <button id="map-style-roadmap" onclick="switchMapStyle('roadmap')" class="px-2.5 py-1 rounded text-xs font-mono font-bold bg-slate-800 text-slate-300 border border-slate-700 hover:text-white flex items-center gap-1">
+            <i data-lucide="map-pin" class="w-3.5 h-3.5"></i> Google Roadmap
+          </button>
+
+          <button id="map-style-terrain" onclick="switchMapStyle('terrain')" class="px-2.5 py-1 rounded text-xs font-mono font-bold bg-slate-800 text-slate-300 border border-slate-700 hover:text-white flex items-center gap-1">
+            <i data-lucide="mountain" class="w-3.5 h-3.5"></i> Terrain
+          </button>
+
+          <div class="h-4 w-px bg-slate-700"></div>
+
+          <button id="layer-land" onclick="toggleDomainLayer('land')" class="px-2.5 py-1 rounded text-xs font-mono font-bold bg-tcyan/20 text-tcyan border border-tcyan/50 flex items-center gap-1">
+            <i data-lucide="shield" class="w-3.5 h-3.5"></i> Land Units
+          </button>
+          <button id="layer-air" onclick="toggleDomainLayer('air')" class="px-2.5 py-1 rounded text-xs font-mono font-bold bg-slate-800 text-slate-300 border border-slate-700 hover:text-white flex items-center gap-1">
+            <i data-lucide="plane" class="w-3.5 h-3.5"></i> Air Assets
+          </button>
+        </div>
+
+        <!-- Global Location Finder Search Bar -->
+        <div class="flex items-center space-x-2 bg-c2panel/95 backdrop-blur border border-c2border px-2 py-1 rounded-lg shadow-2xl w-[450px]">
+          <i data-lucide="search" class="w-3.5 h-3.5 text-tcyan"></i>
+          <input type="text" id="map-search-input" onkeydown="if(event.key==='Enter') searchLocationOnMap()" class="flex-1 bg-c2dark/80 border border-slate-700 rounded px-2 py-1 text-xs font-mono text-slate-100 outline-none focus:border-tcyan placeholder-slate-500" placeholder="Search any live location (e.g. New York, London, Tokyo, Paris)...">
+          <button onclick="searchLocationOnMap()" class="px-2 py-1 bg-aipblue hover:bg-blue-600 text-white font-mono font-bold text-xs rounded transition flex items-center gap-1">
+            Search Location
+          </button>
+        </div>
       </div>
 
       <!-- Simulation RTS Commands & Map Tools (Right Top) -->
       <div class="absolute top-12 right-3 z-20 flex items-center space-x-2 bg-c2panel/90 backdrop-blur border border-c2border p-1.5 rounded-lg shadow-2xl text-xs font-mono">
+        <button onclick="locateUserLivePosition()" class="px-2.5 py-1 bg-emerald-950/80 text-tgreen border border-emerald-500/50 rounded hover:bg-emerald-900 font-bold flex items-center gap-1 shadow-[0_0_10px_rgba(16,185,129,0.3)]">
+          <i data-lucide="navigation" class="w-3.5 h-3.5"></i> Live Center
+        </button>
         <button onclick="triggerSquadMoveOrder()" class="px-2.5 py-1 bg-blue-950/80 text-tcyan border border-cyan-500/50 rounded hover:bg-blue-900 font-bold flex items-center gap-1 shadow-[0_0_10px_rgba(0,240,255,0.2)]">
           <i data-lucide="footprints" class="w-3.5 h-3.5"></i> Move Squad
         </button>
