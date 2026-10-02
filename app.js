@@ -1,6 +1,6 @@
 /**
- * Palantir AIP, C2 Cockpit & VR Spatial Military Simulation Platform Engine
- * Advanced Graphical Upgrade: Realistic Satellite Grid, 3D Unit Vectors, VR Spatial Node Array
+ * Palantir AIP, C2 Cockpit, Google Maps GIS & RTS Game Simulation Platform Engine
+ * Real Google Satellite Tiles, Animated Soldier Sprites, Squad Waypoint Movement, & Gunfire Tracers
  */
 
 // ==========================================
@@ -13,6 +13,11 @@ const state = {
   
   // Active Left Sidebar Tab ('aip' | 'hierarchy')
   activeLeftTab: 'aip',
+
+  // Map Basemap Style ('satellite' | 'hybrid' | 'dark')
+  mapStyle: 'satellite',
+  leafletMap: null,
+  leafletTileLayer: null,
 
   // Comms & Spectrum State
   commsDegraded: false,
@@ -43,8 +48,19 @@ const state = {
     measureStart: null,
     measureEnd: null
   },
-  
-  // Units & Positions (Inspired by Image 1 VR Spatial & Palantir AIP)
+
+  // BLUFOR Infantry Squad Soldiers (RTS Game Simulation)
+  soldiers: [
+    { name: 'K. Adams (Lead)', x: 180, y: 320, targetX: 180, targetY: 320, speed: 1.2, status: 'ADVANCING', health: 100, ammo: 120 },
+    { name: 'L. Marshall (Rifle)', x: 165, y: 340, targetX: 165, targetY: 340, speed: 1.2, status: 'COVERING', health: 90, ammo: 45 },
+    { name: 'M. Lawson (Auto)', x: 195, y: 340, targetX: 195, targetY: 340, speed: 1.2, status: 'ADVANCING', health: 95, ammo: 200 },
+    { name: 'R. Vance (Grenadier)', x: 180, y: 360, targetX: 180, targetY: 360, speed: 1.2, status: 'READY', health: 100, ammo: 12 }
+  ],
+
+  // Gunfire Tracer Particles Array
+  tracers: [],
+
+  // Units & Positions (Inspired by Palantir AIP & SquadMaps)
   units: [
     { name: 'KNIGHT 114 (HIMARS)', x: 180, y: 340, type: 'blue-artillery' },
     { name: '159th Artillery BN', x: 220, y: 390, type: 'blue-artillery' },
@@ -53,7 +69,7 @@ const state = {
     { name: 'Team Omega', x: 530, y: 470, type: 'blue-squad' },
     { name: 'HAWK 11 (F-16)', x: 500, y: 560, type: 'blue-air', angle: 45 },
     
-    // Red Threat Targets (Palantir AIP Image 2 replica)
+    // Red Threat Targets
     { name: 'Military Command', x: 580, y: 140, type: 'red-target', destroyed: false },
     { name: 'Comms Facility', x: 500, y: 220, type: 'red-target', destroyed: false },
     { name: 'Confirmed Armor Attack BN', x: 540, y: 290, type: 'red-target', destroyed: false }
@@ -113,7 +129,62 @@ function playAlertSound() {
 }
 
 // ==========================================
-// 2. TAB SWITCHER (PALANTIR AIP / HIERARCHY)
+// 2. LEAFLET GOOGLE MAPS GIS INTEGRATION
+// ==========================================
+function initLeafletMap() {
+  if (state.leafletMap) return;
+  const mapContainer = document.getElementById('leaflet-map');
+  if (!mapContainer) return;
+
+  // Center over Kuwait City / Desert Operation Area
+  state.leafletMap = L.map('leaflet-map', {
+    center: [29.3759, 47.9774],
+    zoom: 13,
+    zoomControl: false,
+    attributionControl: false
+  });
+
+  // Google Satellite Tile URL Subdomains
+  const googleSatUrl = 'https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}';
+  state.leafletTileLayer = L.tileLayer(googleSatUrl, {
+    maxZoom: 20,
+    subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
+  }).addTo(state.leafletMap);
+}
+
+function switchMapStyle(style) {
+  state.mapStyle = style;
+  ['map-style-sat', 'map-style-hybrid', 'map-style-dark'].forEach(id => {
+    const btn = document.getElementById(id);
+    if (btn) btn.className = "px-2.5 py-1 rounded text-xs font-mono font-bold bg-slate-800 text-slate-300 border border-slate-700 hover:text-white flex items-center gap-1";
+  });
+
+  const activeBtn = document.getElementById(`map-style-${style === 'satellite' ? 'sat' : style}`);
+  if (activeBtn) activeBtn.className = "px-2.5 py-1 rounded text-xs font-mono font-bold bg-tcyan/20 text-tcyan border border-tcyan/50 flex items-center gap-1 shadow-[0_0_8px_rgba(0,240,255,0.2)]";
+
+  if (!state.leafletMap) return;
+
+  if (state.leafletTileLayer) state.leafletMap.removeLayer(state.leafletTileLayer);
+
+  if (style === 'satellite') {
+    state.leafletTileLayer = L.tileLayer('https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', {
+      maxZoom: 20, subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
+    }).addTo(state.leafletMap);
+  } else if (style === 'hybrid') {
+    state.leafletTileLayer = L.tileLayer('https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+      maxZoom: 20, subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
+    }).addTo(state.leafletMap);
+  } else {
+    state.leafletTileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      maxZoom: 19
+    }).addTo(state.leafletMap);
+  }
+
+  playBeep(950, 'sine', 0.05);
+}
+
+// ==========================================
+// 3. TAB SWITCHER & CLOCK CONTROLS
 // ==========================================
 function switchLeftTab(tabName) {
   state.activeLeftTab = tabName;
@@ -140,9 +211,6 @@ function switchLeftTab(tabName) {
   playBeep(900, 'sine', 0.05);
 }
 
-// ==========================================
-// 3. SIMULATION TICK & CLOCK CONTROLS
-// ==========================================
 function setSimSpeed(speed) {
   state.simSpeed = speed;
   ['btn-pause', 'btn-play', 'btn-speed2', 'btn-speed5'].forEach(id => {
@@ -182,7 +250,71 @@ function updateClocks() {
 setInterval(updateClocks, 1000);
 
 // ==========================================
-// 4. ADVANCED GRAPHICAL TACTICAL CANVAS MAP
+// 4. RTS SIMULATION ENGINE & SOLDIERS
+// ==========================================
+function triggerSquadMoveOrder() {
+  const targetX = 380 + Math.random() * 120;
+  const targetY = 220 + Math.random() * 80;
+
+  state.soldiers.forEach((s, idx) => {
+    s.targetX = targetX + (idx % 2 === 0 ? -15 : 15);
+    s.targetY = targetY + (idx > 1 ? 15 : -15);
+    s.status = 'ADVANCING TO WAYPOINT';
+  });
+
+  playAlertSound();
+  alert("RTS SIMULATION: 1st Platoon Squad 1-Alpha ordered to advance to new tactical waypoint!");
+}
+
+function triggerGunfireSimulation() {
+  playBeep(1200, 'sawtooth', 0.1);
+  setTimeout(() => playBeep(600, 'sawtooth', 0.15), 100);
+
+  // Spawn gunfire tracers between Squad & OPFOR targets
+  for (let i = 0; i < 12; i++) {
+    const s = state.soldiers[i % 4];
+    state.tracers.push({
+      startX: s.x,
+      startY: s.y,
+      currentX: s.x,
+      currentY: s.y,
+      targetX: 500 + (Math.random() - 0.5) * 40,
+      targetY: 220 + (Math.random() - 0.5) * 40,
+      progress: 0,
+      speed: 0.04 + Math.random() * 0.03
+    });
+  }
+}
+
+// Update Soldier Positions & Tracers Loop
+function updateSimulationState() {
+  if (state.simSpeed === 0) return;
+
+  // Move soldiers towards target
+  state.soldiers.forEach(s => {
+    const dx = s.targetX - s.x;
+    const dy = s.targetY - s.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+
+    if (dist > 3) {
+      s.x += (dx / dist) * s.speed * state.simSpeed;
+      s.y += (dy / dist) * s.speed * state.simSpeed;
+    } else {
+      s.status = 'IN POSITION';
+    }
+  });
+
+  // Move tracers
+  state.tracers.forEach(t => {
+    t.progress += t.speed * state.simSpeed;
+    t.currentX = t.startX + (t.targetX - t.startX) * t.progress;
+    t.currentY = t.startY + (t.targetY - t.startY) * t.progress;
+  });
+  state.tracers = state.tracers.filter(t => t.progress < 1.0);
+}
+
+// ==========================================
+// 5. TACTICAL CANVAS MAP & SOLDIERS RENDERER
 // ==========================================
 let mapCanvas, mapCtx;
 
@@ -207,7 +339,7 @@ function initMapCanvas() {
     if (state.targetPingMode) {
       const mgrsE = 4820 + Math.floor(clickX / 10);
       const mgrsN = 9100 + Math.floor((mapCanvas.height - clickY) / 10);
-      state.targetPing = { x: clickX, y: clickY, mgrs: `34U ED ${mgrsE} ${mgrsN}` };
+      state.targetPing = { x: clickX, y: clickY, mgrs: `38R QT ${mgrsE} ${mgrsN}` };
       playAlertSound();
       state.targetPingMode = false;
       document.getElementById('btn-target-ping')?.classList.remove('bg-tamber/20', 'text-tamber', 'border-tamber/50');
@@ -237,7 +369,7 @@ function initMapCanvas() {
     const mgrsE = 4820 + Math.floor(mouseX / 10);
     const mgrsN = 9100 + Math.floor((mapCanvas.height - mouseY) / 10);
     const mgrsElem = document.getElementById('map-mgrs');
-    if (mgrsElem) mgrsElem.innerText = `34U ED ${mgrsE} ${mgrsN}`;
+    if (mgrsElem) mgrsElem.innerText = `38R QT ${mgrsE} ${mgrsN}`;
 
     if (state.map.isDragging) {
       state.map.panX = mouseX - state.map.dragStartX;
@@ -300,36 +432,15 @@ function renderMap() {
   const w = mapCanvas.width;
   const h = mapCanvas.height;
 
+  updateSimulationState();
+
   mapCtx.save();
   mapCtx.clearRect(0, 0, w, h);
 
   mapCtx.translate(state.map.panX, state.map.panY);
   mapCtx.scale(state.map.zoom, state.map.zoom);
 
-  // 1. High-Res Dark Satellite Terrain Background (Image 1 VR & Image 5 replica)
-  mapCtx.fillStyle = '#070b12';
-  mapCtx.fillRect(0, 0, w, h);
-
-  // Draw Detailed Topographic Elevation Contour Lines
-  mapCtx.strokeStyle = 'rgba(30, 43, 66, 0.4)';
-  mapCtx.lineWidth = 1;
-  for (let r = 60; r < 700; r += 50) {
-    mapCtx.beginPath();
-    mapCtx.arc(400, 300, r, 0, Math.PI * 2);
-    mapCtx.stroke();
-  }
-
-  // Draw 3D Spatial Grid Wireframe Mesh (Image 1 VR Spatial Grid replica)
-  mapCtx.strokeStyle = 'rgba(0, 240, 255, 0.07)';
-  mapCtx.lineWidth = 1;
-  for (let gx = 0; gx < w; gx += 40) {
-    mapCtx.beginPath(); mapCtx.moveTo(gx, 0); mapCtx.lineTo(gx, h); mapCtx.stroke();
-  }
-  for (let gy = 0; gy < h; gy += 40) {
-    mapCtx.beginPath(); mapCtx.moveTo(0, gy); mapCtx.lineTo(w, gy); mapCtx.stroke();
-  }
-
-  // 2. Red Threat Radius Dome (Palantir AIP Image 2 replica)
+  // 1. Red Threat Radius Dome (Palantir AIP replica)
   if (state.layers.ew) {
     const time = Date.now() * 0.002;
     const pulseR = 120 + Math.sin(time) * 10;
@@ -349,7 +460,7 @@ function renderMap() {
     mapCtx.setLineDash([]);
   }
 
-  // 3. Cyber Datalink Vector Rays (Image 1 & Image 5 replica)
+  // 2. Cyber Datalink Vector Rays
   if (state.layers.cyber) {
     mapCtx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
     mapCtx.lineWidth = 1;
@@ -360,47 +471,52 @@ function renderMap() {
     mapCtx.beginPath(); mapCtx.moveTo(500, 560); mapCtx.lineTo(540, 290); mapCtx.stroke();
 
     mapCtx.setLineDash([]);
+  }
 
-    // Animated Red Cyber Datalink Beam (Image 1 VR Datalink replica)
-    const t = Date.now() * 0.001;
-    mapCtx.strokeStyle = 'rgba(239, 68, 68, 0.8)';
+  // 3. Render Animated BLUFOR Soldier Sprites (RTS Game Simulation)
+  if (state.layers.land) {
+    state.soldiers.forEach(s => {
+      // Draw Soldier Body Figure
+      mapCtx.fillStyle = '#00F0FF';
+      mapCtx.beginPath(); mapCtx.arc(s.x, s.y - 6, 4, 0, Math.PI * 2); mapCtx.fill(); // Helmet Head
+      mapCtx.fillRect(s.x - 4, s.y - 2, 8, 10); // Body Armor Uniform
+
+      // Rifle Weapon Barrel
+      mapCtx.strokeStyle = '#FFFFFF';
+      mapCtx.lineWidth = 2;
+      mapCtx.beginPath(); mapCtx.moveTo(s.x, s.y); mapCtx.lineTo(s.x + 8, s.y - 2); mapCtx.stroke();
+
+      // Mini Health Bar above Soldier
+      mapCtx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+      mapCtx.fillRect(s.x - 10, s.y - 14, 20, 3);
+      mapCtx.fillStyle = '#10B981';
+      mapCtx.fillRect(s.x - 10, s.y - 14, 20 * (s.health / 100), 3);
+
+      // Soldier Name Tag
+      mapCtx.fillStyle = '#00F0FF';
+      mapCtx.font = 'bold 8px monospace';
+      mapCtx.fillText(s.name, s.x - 22, s.y + 16);
+    });
+  }
+
+  // 4. Render Gunfire Tracers Particles
+  state.tracers.forEach(t => {
+    mapCtx.strokeStyle = '#F59E0B';
     mapCtx.lineWidth = 2;
     mapCtx.beginPath();
-    mapCtx.moveTo(180, 340);
-    mapCtx.lineTo(180 + (540 - 180) * ((t % 2) / 2), 340 + (290 - 340) * ((t % 2) / 2));
+    mapCtx.moveTo(t.currentX, t.currentY);
+    mapCtx.lineTo(t.currentX - 10, t.currentY - 10);
     mapCtx.stroke();
-  }
 
-  // 4. VR Spatial Holographic Operator Avatar Pin ("Smack Target" marker from Image 1 VR replica)
-  if (state.layers.air) {
-    mapCtx.save();
-    mapCtx.translate(680, 380);
-    
-    // Glowing Blue Head Silhouette
-    mapCtx.fillStyle = '#00F0FF';
-    mapCtx.beginPath(); mapCtx.arc(0, -20, 8, 0, Math.PI * 2); mapCtx.fill();
-    mapCtx.beginPath(); mapCtx.arc(0, -4, 14, Math.PI, 0); mapCtx.fill();
+    // Hit spark particle at tracer head
+    mapCtx.fillStyle = '#EF4444';
+    mapCtx.beginPath(); mapCtx.arc(t.currentX, t.currentY, 3, 0, Math.PI * 2); mapCtx.fill();
+  });
 
-    // VR Holographic Stand Pole
-    mapCtx.strokeStyle = 'rgba(0, 240, 255, 0.8)';
-    mapCtx.lineWidth = 1.5;
-    mapCtx.beginPath(); mapCtx.moveTo(0, 0); mapCtx.lineTo(0, 30); mapCtx.stroke();
-
-    // "Smack Target" Pill Tag (Image 1 VR replica)
-    mapCtx.fillStyle = 'rgba(13, 18, 29, 0.9)';
-    mapCtx.strokeStyle = '#00F0FF';
-    mapCtx.lineWidth = 1;
-    mapCtx.beginPath(); mapCtx.roundRect(15, -15, 80, 20, 4); mapCtx.fill(); mapCtx.stroke();
-    mapCtx.fillStyle = '#FFFFFF'; mapCtx.font = 'bold 9px monospace';
-    mapCtx.fillText('Smack Target', 22, -2);
-    
-    mapCtx.restore();
-  }
-
-  // 5. SquadMaps Hexagon Waypoint Cap Points (Image 4 replica)
+  // 5. SquadMaps Hexagon Waypoint Cap Points
   if (state.layers.land) {
     state.waypoints.forEach(wp => {
-      mapCtx.fillStyle = 'rgba(0, 240, 255, 0.15)';
+      mapCtx.fillStyle = 'rgba(0, 240, 255, 0.2)';
       mapCtx.strokeStyle = '#00F0FF';
       mapCtx.lineWidth = 1.5;
 
@@ -414,17 +530,13 @@ function renderMap() {
 
       mapCtx.fillStyle = '#FFFFFF'; mapCtx.font = 'bold 10px monospace';
       mapCtx.fillText(wp.id, wp.x - 3, wp.y + 3);
-
-      mapCtx.fillStyle = '#94A3B8'; mapCtx.font = '9px monospace';
-      mapCtx.fillText(wp.name, wp.x - 25, wp.y - 15);
     });
   }
 
-  // 6. Unit Markers (F-16 Jet Vector, HIMARS Truck, NATO Blue Square & Red Diamond from Image 1 & Image 2)
+  // 6. Unit Markers
   state.units.forEach(u => {
     if (u.type === 'red-target') {
       if (!u.destroyed) {
-        // Red Diamond NATO Marker
         mapCtx.fillStyle = '#EF4444';
         mapCtx.beginPath();
         mapCtx.moveTo(u.x, u.y - 10);
@@ -438,7 +550,6 @@ function renderMap() {
         mapCtx.fillStyle = '#EF4444'; mapCtx.font = 'bold 9px monospace';
         mapCtx.fillText(u.name, u.x - 35, u.y + 22);
       } else {
-        // Neutralized Target Cross
         mapCtx.strokeStyle = '#EF4444'; mapCtx.lineWidth = 2;
         mapCtx.beginPath();
         mapCtx.moveTo(u.x - 10, u.y - 10); mapCtx.lineTo(u.x + 10, u.y + 10);
@@ -447,32 +558,7 @@ function renderMap() {
         mapCtx.fillStyle = '#10B981'; mapCtx.font = 'bold 9px monospace';
         mapCtx.fillText('NEUTRALIZED', u.x - 30, u.y + 22);
       }
-    } else if (u.type === 'blue-air') {
-      // Detailed F-16 Fighter Jet Sprite (Image 1 VR F-16 replica)
-      u.x += Math.sin(Date.now() * 0.001) * 0.5;
-      mapCtx.save();
-      mapCtx.translate(u.x, u.y);
-      mapCtx.fillStyle = '#00F0FF';
-      mapCtx.beginPath();
-      mapCtx.moveTo(0, -14);
-      mapCtx.lineTo(10, 10);
-      mapCtx.lineTo(0, 4);
-      mapCtx.lineTo(-10, 10);
-      mapCtx.closePath();
-      mapCtx.fill();
-      
-      // Contrail Vector Trail
-      mapCtx.strokeStyle = 'rgba(0, 240, 255, 0.4)'; mapCtx.lineWidth = 1.5;
-      mapCtx.beginPath(); mapCtx.moveTo(0, 4); mapCtx.lineTo(-30, 40); mapCtx.stroke();
-
-      mapCtx.restore();
-
-      // Air Telemetry Label (21 nmi | FL240)
-      mapCtx.fillStyle = '#00F0FF'; mapCtx.font = 'bold 9px monospace';
-      mapCtx.fillText(`${u.name} [21 nmi | FL240]`, u.x - 45, u.y + 24);
-
     } else {
-      // Blue Square NATO Unit Marker
       mapCtx.fillStyle = '#1D6BF3';
       mapCtx.fillRect(u.x - 9, u.y - 9, 18, 18);
       mapCtx.strokeStyle = '#FFFFFF'; mapCtx.lineWidth = 1.5;
@@ -521,7 +607,7 @@ function toggleDomainLayer(domain) {
 }
 
 // ==========================================
-// 5. SUB-UNIT PROCEDURAL VIDEO FEEDS RENDERER
+// 6. SUB-UNIT PROCEDURAL VIDEO FEEDS
 // ==========================================
 function initFeedCanvases() {
   for (let i = 1; i <= 6; i++) {
@@ -588,7 +674,7 @@ function initFeedCanvases() {
 }
 
 // ==========================================
-// 6. TIMELINE GANTT CHART ENGINE
+// 7. TIMELINE GANTT CHART ENGINE
 // ==========================================
 function initTimelineChart() {
   const canvas = document.getElementById('timeline-chart');
@@ -657,7 +743,7 @@ function initTimelineChart() {
 }
 
 // ==========================================
-// 7. INSTRUCTOR SCENARIO INJECTS & COA EXECUTION
+// 8. INSTRUCTOR SCENARIO INJECTS & COA EXECUTION
 // ==========================================
 function updateLagValue(val) {
   state.commsLagSeconds = parseInt(val);
@@ -719,6 +805,7 @@ function submitAipQuery() {
 
 function executeCOA(num) {
   state.units.forEach(u => { if (u.type === 'red-target') u.destroyed = true; });
+  triggerGunfireSimulation();
   playAlertSound();
   alert(`COMMAND EXECUTED: COA ${num} deployed! Targets neutralized.`);
   
@@ -738,7 +825,7 @@ function renderAARTable() {
   tbody.innerHTML = state.decisionLog.map(row => `
     <tr>
       <td class="p-2.5 text-tcyan font-bold">${row.time}</td>
-      <td class="p-2.5 text-slate-200">${row.event}</td>
+      <td class="p-2.5 text-slate-300">${row.event}</td>
       <td class="p-2.5 text-slate-300">${row.action}</td>
       <td class="p-2.5 text-tamber">${row.lag}</td>
       <td class="p-2.5 text-tgreen font-bold">${row.outcome}</td>
@@ -752,6 +839,7 @@ function closeModal(id) { document.getElementById(id)?.classList.add('hidden'); 
 
 // Initialize on DOM Ready
 window.addEventListener('DOMContentLoaded', () => {
+  initLeafletMap();
   initMapCanvas();
   initFeedCanvases();
   initTimelineChart();

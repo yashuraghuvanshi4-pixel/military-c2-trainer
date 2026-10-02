@@ -1,4 +1,4 @@
-/* High-End Palantir AIP, C2 Cockpit & VR Spatial Tactical Aesthetic */
+/* Palantir AIP, C2 Cockpit, Google Maps GIS & RTS Game Simulation Styling */
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 :root {
@@ -54,7 +54,32 @@ body {
   background: #00F0FF;
 }
 
-/* VR Spatial Node Bar Styling (Image 1 VR Node Grid replica) */
+/* Leaflet Map Customization */
+#leaflet-map {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0; left: 0;
+  z-index: 1;
+}
+
+.leaflet-container {
+  background: #070b12 !important;
+}
+
+.leaflet-control-zoom, .leaflet-control-attribution {
+  display: none !important;
+}
+
+/* Canvas Overlay over Leaflet Map */
+#map-canvas {
+  position: absolute;
+  top: 0; left: 0;
+  z-index: 10;
+  pointer-events: auto;
+}
+
+/* VR Spatial Node Card Styling */
 .vr-node-card {
   background: rgba(13, 24, 43, 0.85);
   border: 1px solid rgba(0, 240, 255, 0.35);
@@ -67,7 +92,7 @@ body {
   box-shadow: 0 0 10px rgba(0, 240, 255, 0.4);
 }
 
-/* HUD Glassmorphism & Corner Reticles */
+/* HUD Cards & Glassmorphism */
 .hud-card {
   background: rgba(18, 24, 38, 0.9);
   backdrop-filter: blur(12px);

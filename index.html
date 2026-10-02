@@ -32,6 +32,9 @@
   <script src="https://unpkg.com/lucide@latest"></script>
   <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Leaflet GIS Map CDN -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body class="bg-c2bg text-slate-200 h-screen flex flex-col overflow-hidden font-sans antialiased">
@@ -52,13 +55,13 @@
           </div>
           <h1 class="text-[11px] font-mono text-slate-400 flex items-center gap-2">
             OPERATION DESERT STORM // C2 DEGRADED TRAINER
-            <span class="text-[9px] text-tcyan">(MOCK DATA ACTIVE)</span>
+            <span class="text-[9px] text-tcyan">(GOOGLE GIS MAP & RTS SIMULATION ACTIVE)</span>
           </h1>
         </div>
       </div>
     </div>
 
-    <!-- Center Top Cockpit Gauges (Image 5 replica) -->
+    <!-- Center Top Cockpit Gauges -->
     <div class="hidden lg:flex items-center space-x-4 font-mono text-[10px]">
       <!-- Gauge 1: Cannons -->
       <div class="flex items-center space-x-2 bg-c2card border border-c2border px-2 py-1 rounded">
@@ -136,7 +139,7 @@
   <!-- MAIN SPLIT-SCREEN WORKSPACE -->
   <main class="flex-1 flex overflow-hidden relative">
 
-    <!-- LEFT PANEL: DUAL-TAB SWITCHER (PALANTIR AIP COA ASSISTANT + SQUAD HIERARCHY) -->
+    <!-- LEFT PANEL: DUAL-TAB SWITCHER -->
     <aside class="w-[450px] bg-c2panel border-r border-c2border flex flex-col z-20 shadow-2xl">
       
       <!-- Tab Navigation Switcher Header -->
@@ -149,7 +152,7 @@
         </button>
       </div>
 
-      <!-- TAB 1: PALANTIR AIP DECISION SUPPORT ASSISTANT (IMAGE 2 REPLICA) -->
+      <!-- TAB 1: PALANTIR AIP DECISION SUPPORT ASSISTANT -->
       <div id="left-tab-aip" class="flex-1 flex flex-col overflow-y-auto p-3 space-y-3">
         
         <!-- CPT Emerson Review Header -->
@@ -316,10 +319,10 @@
 
     </aside>
 
-    <!-- CENTER PANEL: MULTI-DOMAIN GIS TACTICAL MAP & VR SPATIAL NODE BAR -->
+    <!-- CENTER PANEL: GOOGLE MAPS SATELLITE GIS & RTS SIMULATION CANVAS -->
     <section class="flex-1 flex flex-col bg-c2dark relative overflow-hidden">
 
-      <!-- VR Spatial Node Status Array (Image 1 VR Spatial Node Grid replica) -->
+      <!-- VR Spatial Node Status Array -->
       <div class="bg-c2dark/90 border-b border-c2border px-3 py-1.5 flex items-center justify-between text-xs font-mono z-20">
         <div class="flex items-center space-x-2 overflow-x-auto py-0.5">
           <span class="text-tcyan font-bold text-[10px] uppercase tracking-wider shrink-0">VR Mesh Nodes:</span>
@@ -349,39 +352,49 @@
         </div>
       </div>
 
-      <!-- Map Domain Layer Toggles -->
+      <!-- Map Layer & Google Tile Switcher Toolbar -->
       <div class="absolute top-12 left-3 z-20 flex items-center space-x-2 bg-c2panel/90 backdrop-blur border border-c2border p-1.5 rounded-lg shadow-2xl">
-        <span class="text-[10px] font-mono text-slate-400 px-2 font-bold uppercase tracking-wider border-r border-slate-700">Domain Layers</span>
+        <span class="text-[10px] font-mono text-slate-400 px-2 font-bold uppercase tracking-wider border-r border-slate-700">Map Mode</span>
         
-        <button id="layer-land" onclick="toggleDomainLayer('land')" class="px-2.5 py-1 rounded text-xs font-mono font-bold bg-tcyan/20 text-tcyan border border-tcyan/50 flex items-center gap-1 shadow-[0_0_8px_rgba(0,240,255,0.2)]">
-          <i data-lucide="shield" class="w-3.5 h-3.5"></i> Land
+        <button id="map-style-sat" onclick="switchMapStyle('satellite')" class="px-2.5 py-1 rounded text-xs font-mono font-bold bg-tcyan/20 text-tcyan border border-tcyan/50 flex items-center gap-1 shadow-[0_0_8px_rgba(0,240,255,0.2)]">
+          <i data-lucide="globe" class="w-3.5 h-3.5"></i> Google Satellite
         </button>
 
+        <button id="map-style-hybrid" onclick="switchMapStyle('hybrid')" class="px-2.5 py-1 rounded text-xs font-mono font-bold bg-slate-800 text-slate-300 border border-slate-700 hover:text-white flex items-center gap-1">
+          <i data-lucide="map" class="w-3.5 h-3.5"></i> Google Hybrid
+        </button>
+
+        <button id="map-style-dark" onclick="switchMapStyle('dark')" class="px-2.5 py-1 rounded text-xs font-mono font-bold bg-slate-800 text-slate-300 border border-slate-700 hover:text-white flex items-center gap-1">
+          <i data-lucide="layers" class="w-3.5 h-3.5"></i> Vector Dark
+        </button>
+
+        <div class="h-4 w-px bg-slate-700"></div>
+
+        <button id="layer-land" onclick="toggleDomainLayer('land')" class="px-2.5 py-1 rounded text-xs font-mono font-bold bg-tcyan/20 text-tcyan border border-tcyan/50 flex items-center gap-1">
+          <i data-lucide="shield" class="w-3.5 h-3.5"></i> Land
+        </button>
         <button id="layer-air" onclick="toggleDomainLayer('air')" class="px-2.5 py-1 rounded text-xs font-mono font-bold bg-slate-800 text-slate-300 border border-slate-700 hover:text-white flex items-center gap-1">
           <i data-lucide="plane" class="w-3.5 h-3.5"></i> Air
         </button>
-
-        <button id="layer-cyber" onclick="toggleDomainLayer('cyber')" class="px-2.5 py-1 rounded text-xs font-mono font-bold bg-slate-800 text-slate-300 border border-slate-700 hover:text-white flex items-center gap-1">
-          <i data-lucide="cpu" class="w-3.5 h-3.5"></i> Cyber
-        </button>
-
-        <button id="layer-ew" onclick="toggleDomainLayer('ew')" class="px-2.5 py-1 rounded text-xs font-mono font-bold bg-slate-800 text-slate-300 border border-slate-700 hover:text-white flex items-center gap-1">
-          <i data-lucide="wifi-off" class="w-3.5 h-3.5"></i> EW Spectrum
-        </button>
       </div>
 
-      <!-- Map Tools Top Right -->
+      <!-- Simulation RTS Commands & Map Tools (Right Top) -->
       <div class="absolute top-12 right-3 z-20 flex items-center space-x-2 bg-c2panel/90 backdrop-blur border border-c2border p-1.5 rounded-lg shadow-2xl text-xs font-mono">
+        <button onclick="triggerSquadMoveOrder()" class="px-2.5 py-1 bg-blue-950/80 text-tcyan border border-cyan-500/50 rounded hover:bg-blue-900 font-bold flex items-center gap-1 shadow-[0_0_10px_rgba(0,240,255,0.2)]">
+          <i data-lucide="footprints" class="w-3.5 h-3.5"></i> Move Squad
+        </button>
+        <button onclick="triggerGunfireSimulation()" class="px-2.5 py-1 bg-amber-950/80 text-tamber border border-amber-600/50 rounded hover:bg-amber-900 font-bold flex items-center gap-1">
+          <i data-lucide="crosshair" class="w-3.5 h-3.5"></i> Fire Tracers
+        </button>
+
+        <div class="h-4 w-px bg-slate-700"></div>
+
         <button onclick="mapZoomIn()" class="p-1.5 bg-slate-800 border border-slate-700 rounded text-slate-200 hover:text-tcyan" title="Zoom In">
           <i data-lucide="plus" class="w-4 h-4"></i>
         </button>
         <button onclick="mapZoomOut()" class="p-1.5 bg-slate-800 border border-slate-700 rounded text-slate-200 hover:text-tcyan" title="Zoom Out">
           <i data-lucide="minus" class="w-4 h-4"></i>
         </button>
-        <button onclick="resetMapView()" class="px-2 py-1 bg-slate-800 border border-slate-700 rounded text-slate-200 hover:text-tcyan" title="Reset View">
-          Reset View
-        </button>
-        <div class="h-4 w-px bg-slate-700"></div>
         <button id="btn-measure" onclick="toggleMapMeasure()" class="px-2 py-1 bg-slate-800 border border-slate-700 rounded text-slate-300 hover:text-tcyan flex items-center gap-1">
           <i data-lucide="ruler" class="w-3.5 h-3.5"></i> Measure
         </button>
@@ -390,16 +403,20 @@
         </button>
       </div>
 
-      <!-- Canvas Interactive Tactical Map -->
+      <!-- Map Container (Leaflet GIS Layer + Canvas Simulation Overlay) -->
       <div class="flex-1 relative w-full h-full bg-grid-pattern cursor-crosshair">
-        <canvas id="map-canvas" class="w-full h-full block"></canvas>
+        <!-- Leaflet Google Maps Satellite Layer -->
+        <div id="leaflet-map"></div>
+
+        <!-- Canvas Interactive Unit & Simulation Engine Layer -->
+        <canvas id="map-canvas" class="w-full h-full block relative z-10"></canvas>
 
         <!-- Map Footer Readout Overlay -->
         <div class="absolute bottom-2 left-3 z-20 font-mono text-[10px] text-slate-400 bg-c2panel/90 border border-slate-800 px-3 py-1 rounded flex items-center space-x-4">
-          <div>MGRS: <span id="map-mgrs" class="text-tcyan font-bold">34U ED 4829 9120</span></div>
+          <div>GPS LAT/LON: <span id="map-latlon" class="text-tcyan font-bold">29°22'14"N 47°58'40"E</span></div>
+          <div>MGRS: <span id="map-mgrs" class="text-tcyan font-bold">38R QT 4829 9120</span></div>
           <div>ELEV: <span class="text-slate-200">420m</span></div>
           <div>TARGET DIST: <span id="map-dist" class="text-tamber font-bold">1.42 km</span></div>
-          <div>ACTIVE DOMAIN: <span id="map-domain-label" class="text-tcyan font-bold">LAND + AIR + CYBER + EW</span></div>
         </div>
       </div>
 
