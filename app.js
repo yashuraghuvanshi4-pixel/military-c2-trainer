@@ -17,6 +17,8 @@ const state = {
   droppedFeeds: new Set(), // Set of feed IDs (1 to 6)
   phantomIntelActive: false,
   gpsSpoofingActive: false,
+  targetPing: null, // { x, y, mgrs }
+  targetPingMode: false,
   
   // Multi-Domain Layers Enabled
   layers: {
@@ -189,6 +191,16 @@ function initMapCanvas() {
     const clickX = e.clientX - rect.left;
     const clickY = e.clientY - rect.top;
 
+    if (state.targetPingMode) {
+      const mgrsE = 4820 + Math.floor(clickX / 10);
+      const mgrsN = 9100 + Math.floor((mapCanvas.height - clickY) / 10);
+      state.targetPing = { x: clickX, y: clickY, mgrs: `34U ED ${mgrsE} ${mgrsN}` };
+      playAlertSound();
+      state.targetPingMode = false;
+      document.getElementById('btn-target-ping')?.classList.remove('bg-tamber/20', 'text-tamber', 'border-tamber/50');
+      return;
+    }
+
     if (state.map.measuring) {
       if (!state.map.measureStart) {
         state.map.measureStart = { x: clickX, y: clickY };
@@ -252,19 +264,35 @@ function resetMapView() {
   state.map.measuring = false;
   state.map.measureStart = null;
   state.map.measureEnd = null;
+  state.targetPing = null;
+  state.targetPingMode = false;
   document.getElementById('btn-measure')?.classList.remove('bg-tcyan/20', 'text-tcyan', 'border-tcyan/50');
+  document.getElementById('btn-target-ping')?.classList.remove('bg-tamber/20', 'text-tamber', 'border-tamber/50');
 }
 
 function toggleMapMeasure() {
   state.map.measuring = !state.map.measuring;
   state.map.measureStart = null;
   state.map.measureEnd = null;
+  state.targetPingMode = false;
   const btn = document.getElementById('btn-measure');
   if (state.map.measuring) {
     btn.classList.add('bg-tcyan/20', 'text-tcyan', 'border-tcyan/50');
   } else {
     btn.classList.remove('bg-tcyan/20', 'text-tcyan', 'border-tcyan/50');
   }
+}
+
+function toggleTargetPing() {
+  state.targetPingMode = !state.targetPingMode;
+  state.map.measuring = false;
+  const btn = document.getElementById('btn-target-ping');
+  if (state.targetPingMode) {
+    btn.classList.add('bg-tamber/20', 'text-tamber', 'border-tamber/50');
+  } else {
+    btn.classList.remove('bg-tamber/20', 'text-tamber', 'border-tamber/50');
+  }
+  playBeep(900, 'sine', 0.05);
 }
 
 function calculateMeasurement() {
@@ -509,6 +537,25 @@ function renderMap() {
     mapCtx.fillStyle = '#F59E0B';
     mapCtx.font = 'bold 9px monospace';
     mapCtx.fillText('? UNCONFIRMED CONTACT (CONF 42%)', pt.x - 50, pt.y + 20);
+  }
+
+  // Target Ping Pulse Marker
+  if (state.targetPing) {
+    const p = state.targetPing;
+    const pulseR = 12 + Math.sin(Date.now() * 0.008) * 6;
+    mapCtx.strokeStyle = '#F59E0B';
+    mapCtx.lineWidth = 2;
+    mapCtx.beginPath();
+    mapCtx.arc(p.x, p.y, pulseR, 0, Math.PI * 2);
+    mapCtx.stroke();
+
+    mapCtx.fillStyle = '#F59E0B';
+    mapCtx.beginPath();
+    mapCtx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+    mapCtx.fill();
+
+    mapCtx.font = 'bold 10px monospace';
+    mapCtx.fillText(`DESIGNATED TARGET [${p.mgrs}]`, p.x - 50, p.y - 12);
   }
 
   // 7. Render Measurement Ruler Tool Vector Line
@@ -810,6 +857,25 @@ function updateLagValue(val) {
   }
 }
 
+function applyPresetScenario(type) {
+  if (type === 'sandstorm') {
+    updateLagValue(90);
+    toggleFeedDropout(2);
+    toggleFeedDropout(6);
+    alert("INSTRUCTOR PRESET ACTIVATED: Sandstorm EW Jamming (+90s Lag, NVG & Reaper feeds blacked out)");
+  } else if (type === 'cyber') {
+    injectConflictingIntel();
+    injectGpsSpoofing();
+    alert("INSTRUCTOR PRESET ACTIVATED: Cyber Datalink Breach (Phantom OPFOR contacts & GPS drift enabled)");
+  } else if (type === 'ambush') {
+    updateLagValue(45);
+    const hrL = document.getElementById('hr-LMarshall');
+    if (hrL) hrL.innerText = '148';
+    playAlertSound();
+    alert("INSTRUCTOR PRESET ACTIVATED: CQB Heavy Ambush (Heart rates spiked to 148 bpm, +45s lag)");
+  }
+}
+
 function toggleFeedDropout(camId) {
   if (state.droppedFeeds.has(camId)) {
     state.droppedFeeds.delete(camId);
@@ -876,7 +942,7 @@ let selectedCOANum = 1;
 
 function selectCOA(num) {
   selectedCOANum = num;
-  [1, 2, 3].forEach(n => {
+  [1, 2, 3, 4].forEach(n => {
     const card = document.getElementById(`coa-card-${n}`);
     if (card) {
       if (n === num) {
@@ -889,37 +955,72 @@ function selectCOA(num) {
   playBeep(950, 'sine', 0.05);
 }
 
+function submitAipQuery() {
+  const queryInput = document.getElementById('aip-query-input');
+  const responseBox = document.getElementById('aip-response-box');
+  const responseText = document.getElementById('aip-response-text');
+
+  if (!queryInput || !queryInput.value.trim()) return;
+
+  const query = queryInput.value.trim();
+  playBeep(1100, 'sine', 0.1);
+  responseBox?.classList.remove('hidden');
+
+  if (query.toLowerCase().includes('collateral') || query.toLowerCase().includes('himars')) {
+    responseText.innerText = `AIP ANALYSIS: HIMARS precision rocket barrage carries high civilian collateral risk due to proximity to urban sector. Recommend CAS F-35 Air Strike (COA 1) or Satellite Cyber Frequency Hopping (COA 4) for zero non-combatant impact.`;
+  } else if (query.toLowerCase().includes('time') || query.toLowerCase().includes('fast')) {
+    responseText.innerText = `AIP ANALYSIS: Fast response required. HIMARS (COA 2) takes 2 minutes; Cyber Frequency Hopping (COA 4) takes 30 seconds to restore command datalinks.`;
+  } else {
+    responseText.innerText = `AIP ANALYSIS: Evaluating query '${query}' against real-time satellite telemetry... Recommending COA 4 (Cyber Hopping) to override EW spectrum noise while maintaining 100% ground force safety.`;
+  }
+}
+
 function executeCOA(num) {
   const rationale = document.getElementById('coa-rationale')?.value || 'Standard Tactical Protocol Executed';
   
   if (num === 1) {
-    // Air Strike CAS Execution
     state.units.opforRadar.destroyed = true;
     playAlertSound();
     alert("COMMAND EXECUTED: F-35B Air Strike missile impact confirmed! OPFOR EW Jammer Facility Destroyed!");
   } else if (num === 2) {
-    // HIMARS Rocket Execution
     state.units.opforRadar.destroyed = true;
     playAlertSound();
     alert("COMMAND EXECUTED: HIMARS Battery barrage impact confirmed! Target EW Facility Destroyed!");
-  } else {
-    // Squad Infiltration CQB
+  } else if (num === 3) {
     state.units.opforRadar.destroyed = true;
     playBeep(1100, 'sine', 0.2);
     alert("COMMAND EXECUTED: Squad 1-Alpha breached facility and placed demolition charges. EW Facility Destroyed!");
+  } else if (num === 4) {
+    state.units.opforRadar.destroyed = true;
+    resetAllInjects();
+    playBeep(1200, 'sine', 0.3);
+    alert("COMMAND EXECUTED: Cyber Frequency Hopping satellite link activated! OPFOR Jamming bypassed, all comms nominal!");
   }
+
+  // Update Mission Objective 2 card to 100%
+  const objCard = document.getElementById('obj-2-card');
+  const objPct = document.getElementById('obj-2-pct');
+  const objIcon = document.getElementById('obj-2-icon');
+  const objBadge = document.getElementById('obj-summary-badge');
+  const aarEff = document.getElementById('aar-obj-efficiency');
+
+  if (objCard) objCard.className = "flex items-center justify-between p-1.5 rounded bg-slate-950 border border-green-900/60";
+  if (objPct) { objPct.className = "text-[9px] font-mono text-tgreen font-bold"; objPct.innerText = "100%"; }
+  if (objIcon) { objIcon.className = "w-3.5 h-3.5 text-tgreen"; }
+  if (objBadge) { objBadge.innerText = "3/3 DONE"; objBadge.className = "text-[9px] text-tgreen bg-green-950/60 px-1.5 py-0.5 rounded border border-green-800 font-bold"; }
+  if (aarEff) aarEff.innerText = "3 / 3 Complete";
 
   // Log to AAR Table
   state.decisionLog.push({
     time: document.getElementById('mission-timer')?.innerText || 'T+04:14:00',
-    event: `Executed COA ${num} (${num === 1 ? 'CAS Air Strike' : num === 2 ? 'HIMARS Artillery' : 'Squad Infiltration'})`,
+    event: `Executed COA ${num} (${num === 1 ? 'CAS Air Strike' : num === 2 ? 'HIMARS Artillery' : num === 3 ? 'Squad Infiltration' : 'Cyber Frequency Hopping'})`,
     action: rationale,
     lag: `+${state.commsLagSeconds}s`,
-    outcome: 'TARGET DESTROYED (100%)'
+    outcome: 'TARGET DESTROYED / COMMS RESTORED (100%)'
   });
 
   renderAARTable();
-  updateChartData(state.commsLagSeconds * 1000, -104, 100);
+  updateChartData(0, -104, 100);
   closeModal('coa-modal');
 }
 

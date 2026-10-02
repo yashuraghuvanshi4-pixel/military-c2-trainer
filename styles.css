@@ -101,6 +101,9 @@ body {
 .glow-red {
   text-shadow: 0 0 10px rgba(239, 68, 68, 0.7);
 }
+.glow-purple {
+  text-shadow: 0 0 10px rgba(139, 92, 246, 0.7);
+}
 
 .border-tactical-blue {
   border-color: rgba(0, 240, 255, 0.4);
@@ -175,4 +178,13 @@ body {
 /* Custom Range Slider */
 input[type=range] {
   accent-color: var(--tactical-blue);
+}
+
+/* Tactical Radio Chat Box Animation */
+.chat-entry {
+  animation: fadeIn 0.3s ease-in-out;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
 }

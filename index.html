@@ -197,7 +197,7 @@
         <div class="border border-slate-700/60 rounded bg-slate-900/50 p-2 space-y-2">
           <div class="font-mono text-xs font-bold text-tamber flex items-center justify-between">
             <span class="flex items-center gap-1.5"><i data-lucide="target" class="w-3.5 h-3.5"></i> Mission Objectives</span>
-            <span class="text-[10px] text-tamber bg-amber-950/60 px-1.5 py-0.5 rounded border border-amber-800 font-bold">2/3 DONE</span>
+            <span id="obj-summary-badge" class="text-[10px] text-tamber bg-amber-950/60 px-1.5 py-0.5 rounded border border-amber-800 font-bold">2/3 DONE</span>
           </div>
 
           <div class="space-y-1.5 text-[11px]">
@@ -208,11 +208,11 @@
               <span class="text-[9px] font-mono text-tgreen font-bold">100%</span>
             </div>
 
-            <div class="flex items-center justify-between p-1.5 rounded bg-slate-950 border border-cyan-900/60">
+            <div class="flex items-center justify-between p-1.5 rounded bg-slate-950 border border-cyan-900/60" id="obj-2-card">
               <span class="text-slate-200 flex items-center gap-1.5">
-                <i data-lucide="clock" class="w-3.5 h-3.5 text-tcyan animate-spin"></i> 2. Neutralize Radar & EW Facility
+                <i data-lucide="clock" id="obj-2-icon" class="w-3.5 h-3.5 text-tcyan animate-spin"></i> 2. Neutralize Radar & EW Facility
               </span>
-              <span class="text-[9px] font-mono text-tcyan font-bold">65%</span>
+              <span id="obj-2-pct" class="text-[9px] font-mono text-tcyan font-bold">65%</span>
             </div>
 
             <div class="flex items-center justify-between p-1.5 rounded bg-slate-950 border border-slate-800 opacity-70">
@@ -291,6 +291,9 @@
         <div class="h-4 w-px bg-slate-700"></div>
         <button id="btn-measure" onclick="toggleMapMeasure()" class="px-2 py-1 bg-slate-800 border border-slate-700 rounded text-slate-300 hover:text-tcyan flex items-center gap-1">
           <i data-lucide="ruler" class="w-3.5 h-3.5"></i> Measure
+        </button>
+        <button id="btn-target-ping" onclick="toggleTargetPing()" class="px-2 py-1 bg-slate-800 border border-slate-700 rounded text-slate-300 hover:text-tamber flex items-center gap-1">
+          <i data-lucide="map-pin" class="w-3.5 h-3.5"></i> Target Ping
         </button>
       </div>
 
@@ -475,6 +478,29 @@
       <!-- Modal Body -->
       <div class="p-4 space-y-4 text-xs">
         
+        <!-- Preset Scenario Quick Inject Buttons -->
+        <div class="p-3 bg-slate-900 border border-slate-800 rounded space-y-2">
+          <span class="font-mono font-bold text-tamber text-xs uppercase flex items-center gap-1.5">
+            <i data-lucide="sliders" class="w-4 h-4"></i> Preset Instructor Scenario Injects
+          </span>
+          <div class="grid grid-cols-3 gap-2 font-mono">
+            <button onclick="applyPresetScenario('sandstorm')" class="p-2 bg-amber-950/70 border border-amber-600/50 hover:bg-amber-900 text-tamber font-bold rounded text-left">
+              1. Sandstorm EW Jamming
+              <span class="text-[9px] block text-amber-300 font-normal mt-0.5">+90s Lag | CAM-02/06 Off</span>
+            </button>
+
+            <button onclick="applyPresetScenario('cyber')" class="p-2 bg-purple-950/70 border border-purple-600/50 hover:bg-purple-900 text-purple-300 font-bold rounded text-left">
+              2. Cyber Datalink Breach
+              <span class="text-[9px] block text-purple-200 font-normal mt-0.5">Phantom Contacts + GPS Drift</span>
+            </button>
+
+            <button onclick="applyPresetScenario('ambush')" class="p-2 bg-red-950/70 border border-red-600/50 hover:bg-red-900 text-tred font-bold rounded text-left">
+              3. CQB Heavy Ambush
+              <span class="text-[9px] block text-red-300 font-normal mt-0.5">+45s Lag | Spike Vitals</span>
+            </button>
+          </div>
+        </div>
+
         <!-- Inject 1: Communication Lag / Delay Slider -->
         <div class="p-3 bg-slate-900/80 border border-slate-800 rounded space-y-2">
           <div class="flex items-center justify-between">
@@ -550,7 +576,7 @@
 
   <!-- MODAL 2: AI COA (COURSE OF ACTION) ASSISTANT PANEL -->
   <div id="coa-modal" class="fixed inset-0 z-50 modal-backdrop hidden flex items-center justify-center p-4">
-    <div class="bg-c2panel border border-cyan-500/60 rounded-xl w-full max-w-4xl shadow-[0_0_40px_rgba(0,240,255,0.25)] overflow-hidden flex flex-col hud-box hud-corner-tl">
+    <div class="bg-c2panel border border-cyan-500/60 rounded-xl w-full max-w-5xl shadow-[0_0_40px_rgba(0,240,255,0.25)] overflow-hidden flex flex-col hud-box hud-corner-tl">
       <!-- Modal Header -->
       <div class="bg-slate-900 px-5 py-3.5 border-b border-slate-800 flex items-center justify-between">
         <div class="flex items-center space-x-2">
@@ -579,22 +605,22 @@
           </div>
         </div>
 
-        <!-- COA Comparison Cards Grid (3 Columns) -->
-        <div class="grid grid-cols-3 gap-4">
+        <!-- COA Comparison Cards Grid (4 Columns) -->
+        <div class="grid grid-cols-4 gap-3">
 
           <!-- COA 1: Air Strike -->
-          <div id="coa-card-1" class="border border-slate-700 bg-slate-900/90 rounded-lg p-4 space-y-3 flex flex-col justify-between hover:border-tcyan transition cursor-pointer" onclick="selectCOA(1)">
+          <div id="coa-card-1" class="border border-slate-700 bg-slate-900/90 rounded-lg p-3 space-y-2 flex flex-col justify-between hover:border-tcyan transition cursor-pointer" onclick="selectCOA(1)">
             <div class="space-y-2">
               <div class="flex items-center justify-between">
-                <span class="font-mono font-bold text-tcyan text-sm">COA 1: CAS AIR STRIKE</span>
-                <span class="px-1.5 py-0.5 rounded text-[9px] font-mono bg-green-950 text-tgreen border border-green-800">88% CONF</span>
+                <span class="font-mono font-bold text-tcyan text-xs">COA 1: CAS AIR STRIKE</span>
+                <span class="px-1 py-0.5 rounded text-[8px] font-mono bg-green-950 text-tgreen border border-green-800">88% CONF</span>
               </div>
-              <div class="text-[11px] text-slate-300">
+              <div class="text-[10px] text-slate-300 leading-snug">
                 Dispatch F-35B Lightning / MQ-9 Reaper precision strike on EW Facility radar array.
               </div>
 
               <!-- Spec Matrix -->
-              <div class="space-y-1 pt-2 font-mono text-[10px] border-t border-slate-800">
+              <div class="space-y-1 pt-2 font-mono text-[9px] border-t border-slate-800">
                 <div class="flex justify-between">
                   <span class="text-slate-400">Time Required:</span>
                   <span class="text-tcyan font-bold">4 mins</span>
@@ -604,38 +630,30 @@
                   <span class="text-slate-200">12.5 km</span>
                 </div>
                 <div class="flex justify-between">
-                  <span class="text-slate-400">Fuel Level:</span>
-                  <span class="text-slate-200">42% (30 mins loiter)</span>
-                </div>
-                <div class="flex justify-between">
                   <span class="text-slate-400">Personnel Risk:</span>
-                  <span class="text-tgreen font-bold">LOW (0 Ground Casualties)</span>
-                </div>
-                <div class="flex justify-between">
-                  <span class="text-slate-400">Spectrum Sensitivity:</span>
-                  <span class="text-tamber font-bold">MEDIUM (GPS Jamming Risk)</span>
+                  <span class="text-tgreen font-bold">LOW</span>
                 </div>
               </div>
             </div>
 
-            <button onclick="executeCOA(1)" class="w-full py-2 bg-tcyan/20 text-tcyan border border-tcyan/50 hover:bg-tcyan/30 rounded font-mono font-bold text-xs transition mt-3">
+            <button onclick="executeCOA(1)" class="w-full py-1.5 bg-tcyan/20 text-tcyan border border-tcyan/50 hover:bg-tcyan/30 rounded font-mono font-bold text-[10px] transition mt-2">
               EXECUTE COA 1
             </button>
           </div>
 
           <!-- COA 2: HIMARS Artillery -->
-          <div id="coa-card-2" class="border border-slate-700 bg-slate-900/90 rounded-lg p-4 space-y-3 flex flex-col justify-between hover:border-tcyan transition cursor-pointer" onclick="selectCOA(2)">
+          <div id="coa-card-2" class="border border-slate-700 bg-slate-900/90 rounded-lg p-3 space-y-2 flex flex-col justify-between hover:border-tcyan transition cursor-pointer" onclick="selectCOA(2)">
             <div class="space-y-2">
               <div class="flex items-center justify-between">
-                <span class="font-mono font-bold text-tamber text-sm">COA 2: HIMARS ROCKET</span>
-                <span class="px-1.5 py-0.5 rounded text-[9px] font-mono bg-amber-950 text-tamber border border-amber-800">76% CONF</span>
+                <span class="font-mono font-bold text-tamber text-xs">COA 2: HIMARS ROCKET</span>
+                <span class="px-1 py-0.5 rounded text-[8px] font-mono bg-amber-950 text-tamber border border-amber-800">76% CONF</span>
               </div>
-              <div class="text-[11px] text-slate-300">
+              <div class="text-[10px] text-slate-300 leading-snug">
                 Launch M31 GMLRS rocket barrage from Battery Alpha to destroy radar facility node.
               </div>
 
               <!-- Spec Matrix -->
-              <div class="space-y-1 pt-2 font-mono text-[10px] border-t border-slate-800">
+              <div class="space-y-1 pt-2 font-mono text-[9px] border-t border-slate-800">
                 <div class="flex justify-between">
                   <span class="text-slate-400">Time Required:</span>
                   <span class="text-tamber font-bold">2 mins</span>
@@ -645,66 +663,100 @@
                   <span class="text-slate-200">32.0 km</span>
                 </div>
                 <div class="flex justify-between">
-                  <span class="text-slate-400">Ammo Reserve:</span>
-                  <span class="text-slate-200">6 Rockets Ready</span>
-                </div>
-                <div class="flex justify-between">
-                  <span class="text-slate-400">Personnel Risk:</span>
-                  <span class="text-tgreen font-bold">NONE (Remote Battery)</span>
-                </div>
-                <div class="flex justify-between">
                   <span class="text-slate-400">Collateral Risk:</span>
-                  <span class="text-tred font-bold">HIGH (Adjacent Civ Structures)</span>
+                  <span class="text-tred font-bold">HIGH</span>
                 </div>
               </div>
             </div>
 
-            <button onclick="executeCOA(2)" class="w-full py-2 bg-tamber/20 text-tamber border border-tamber/50 hover:bg-tamber/30 rounded font-mono font-bold text-xs transition mt-3">
+            <button onclick="executeCOA(2)" class="w-full py-1.5 bg-tamber/20 text-tamber border border-tamber/50 hover:bg-tamber/30 rounded font-mono font-bold text-[10px] transition mt-2">
               EXECUTE COA 2
             </button>
           </div>
 
           <!-- COA 3: Tactical Team Infiltration -->
-          <div id="coa-card-3" class="border border-slate-700 bg-slate-900/90 rounded-lg p-4 space-y-3 flex flex-col justify-between hover:border-tcyan transition cursor-pointer" onclick="selectCOA(3)">
+          <div id="coa-card-3" class="border border-slate-700 bg-slate-900/90 rounded-lg p-3 space-y-2 flex flex-col justify-between hover:border-tcyan transition cursor-pointer" onclick="selectCOA(3)">
             <div class="space-y-2">
               <div class="flex items-center justify-between">
-                <span class="font-mono font-bold text-tgreen text-sm">COA 3: SQUAD INFILTRATION</span>
-                <span class="px-1.5 py-0.5 rounded text-[9px] font-mono bg-cyan-950 text-tcyan border border-cyan-800">64% CONF</span>
+                <span class="font-mono font-bold text-tgreen text-xs">COA 3: INFILTRATION</span>
+                <span class="px-1 py-0.5 rounded text-[8px] font-mono bg-cyan-950 text-tcyan border border-cyan-800">64% CONF</span>
               </div>
-              <div class="text-[11px] text-slate-300">
+              <div class="text-[10px] text-slate-300 leading-snug">
                 Command 1st Platoon Squad 1-Alpha to perform manual CQB breach and explosive charge disable.
               </div>
 
               <!-- Spec Matrix -->
-              <div class="space-y-1 pt-2 font-mono text-[10px] border-t border-slate-800">
+              <div class="space-y-1 pt-2 font-mono text-[9px] border-t border-slate-800">
                 <div class="flex justify-between">
                   <span class="text-slate-400">Time Required:</span>
                   <span class="text-slate-200 font-bold">28 mins</span>
                 </div>
                 <div class="flex justify-between">
-                  <span class="text-slate-400">Target Distance:</span>
+                  <span class="text-slate-400">Target Range:</span>
                   <span class="text-slate-200">3.4 km</span>
                 </div>
                 <div class="flex justify-between">
-                  <span class="text-slate-400">Squad Status:</span>
-                  <span class="text-tgreen">100% Combat Effective</span>
-                </div>
-                <div class="flex justify-between">
                   <span class="text-slate-400">Personnel Risk:</span>
-                  <span class="text-tred font-bold">HIGH (Direct Fire Contact)</span>
-                </div>
-                <div class="flex justify-between">
-                  <span class="text-slate-400">Spectrum Sensitivity:</span>
-                  <span class="text-tgreen font-bold">NONE (Comms Independent)</span>
+                  <span class="text-tred font-bold">HIGH</span>
                 </div>
               </div>
             </div>
 
-            <button onclick="executeCOA(3)" class="w-full py-2 bg-tgreen/20 text-tgreen border border-tgreen/50 hover:bg-tgreen/30 rounded font-mono font-bold text-xs transition mt-3">
+            <button onclick="executeCOA(3)" class="w-full py-1.5 bg-tgreen/20 text-tgreen border border-tgreen/50 hover:bg-tgreen/30 rounded font-mono font-bold text-[10px] transition mt-2">
               EXECUTE COA 3
             </button>
           </div>
 
+          <!-- COA 4: Cyber Countermeasure Frequency Hopping -->
+          <div id="coa-card-4" class="border border-slate-700 bg-slate-900/90 rounded-lg p-3 space-y-2 flex flex-col justify-between hover:border-tcyan transition cursor-pointer" onclick="selectCOA(4)">
+            <div class="space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="font-mono font-bold text-tpurple text-xs">COA 4: CYBER HOPPING</span>
+                <span class="px-1 py-0.5 rounded text-[8px] font-mono bg-purple-950 text-purple-300 border border-purple-800">95% CONF</span>
+              </div>
+              <div class="text-[10px] text-slate-300 leading-snug">
+                Activate LEO satellite mesh frequency hopping to override OPFOR jamming dome instantly.
+              </div>
+
+              <!-- Spec Matrix -->
+              <div class="space-y-1 pt-2 font-mono text-[9px] border-t border-slate-800">
+                <div class="flex justify-between">
+                  <span class="text-slate-400">Time Required:</span>
+                  <span class="text-purple-300 font-bold">30 secs</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-slate-400">Lag Reduction:</span>
+                  <span class="text-tgreen font-bold">-95% (Nominal)</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-slate-400">Personnel Risk:</span>
+                  <span class="text-tgreen font-bold">ZERO</span>
+                </div>
+              </div>
+            </div>
+
+            <button onclick="executeCOA(4)" class="w-full py-1.5 bg-purple-950 text-purple-300 border border-purple-500/50 hover:bg-purple-900 rounded font-mono font-bold text-[10px] transition mt-2">
+              EXECUTE COA 4
+            </button>
+          </div>
+
+        </div>
+
+        <!-- AIP Interactive AI Defense Query Box -->
+        <div class="p-3 bg-slate-900 border border-slate-800 rounded-lg space-y-2">
+          <div class="font-mono text-xs font-bold text-tcyan flex items-center gap-1.5">
+            <i data-lucide="message-square" class="w-4 h-4"></i> ASK AIP DEFENSE ASSISTANT (TACTICAL NLP QUERY):
+          </div>
+          <div class="flex space-x-2">
+            <input type="text" id="aip-query-input" class="flex-1 bg-slate-950 border border-slate-700 rounded px-3 py-1.5 text-xs font-mono text-slate-200 focus:border-tcyan outline-none" placeholder="e.g. What is the collateral risk of using HIMARS vs CAS given current civilian movements?">
+            <button onclick="submitAipQuery()" class="px-4 py-1.5 bg-tcyan/20 text-tcyan border border-tcyan/50 hover:bg-tcyan/30 rounded font-mono font-bold text-xs">
+              Query AIP
+            </button>
+          </div>
+          <div id="aip-response-box" class="hidden p-2.5 bg-slate-950 border border-cyan-900/60 rounded font-mono text-[11px] text-slate-300 leading-relaxed">
+            <span class="text-tcyan font-bold block mb-1">AIP TACTICAL RESPONSE:</span>
+            <span id="aip-response-text">Analyzing satellite telemetry... HIMARS carries high civilian collateral risk due to 200m proximity to urban structure. CAS precision laser guided munition (COA 1) or Cyber Frequency Hopping (COA 4) is recommended to minimize non-combatant impact.</span>
+          </div>
         </div>
 
         <!-- Commander Rationale Input -->
@@ -765,7 +817,7 @@
           <!-- Overall Performance Grade -->
           <div class="text-center px-4 py-2 bg-slate-950 border border-purple-500/40 rounded-lg">
             <div class="text-[10px] text-slate-400 uppercase">Overall C2 Score</div>
-            <div class="text-3xl font-black text-purple-400 glow-purple">A- (92%)</div>
+            <div id="aar-grade-badge" class="text-3xl font-black text-purple-400 glow-purple">A- (92%)</div>
             <div class="text-[9px] text-tgreen">RECOMMENDED FOR COMBAT CERTIFICATION</div>
           </div>
         </div>
@@ -784,7 +836,7 @@
           </div>
           <div class="p-3 bg-slate-900 border border-slate-800 rounded space-y-1">
             <div class="text-slate-400 text-[10px]">Objective Completion Efficiency</div>
-            <div class="text-lg font-bold text-tgreen">2 / 3 Complete</div>
+            <div class="text-lg font-bold text-tgreen" id="aar-obj-efficiency">2 / 3 Complete</div>
             <div class="text-[9px] text-slate-300">EW Radar Node Neutralized</div>
           </div>
         </div>
