@@ -395,6 +395,85 @@ function toggleObjectiveCheck(checkbox) {
   if (percentBar) percentBar.style.width = `${pct}%`;
 }
 
+// Quick Decision Countdown Timer (30s time pressure)
+let quickDecisionSeconds = 28;
+setInterval(() => {
+  if (quickDecisionSeconds > 0) {
+    quickDecisionSeconds--;
+    const timerElem = document.getElementById('decision-timer');
+    if (timerElem) timerElem.innerText = `${quickDecisionSeconds}s`;
+  } else {
+    quickDecisionSeconds = 30;
+  }
+}, 1000);
+
+function triggerCyberCountermeasure() {
+  playAlertSound();
+  state.commsDegraded = false;
+  state.commsLagSeconds = 0;
+  state.droppedFeeds.clear();
+  
+  const ewIndicator = document.getElementById('ew-status-text');
+  if (ewIndicator) {
+    ewIndicator.innerText = "OFF // 0% DEGRADED";
+    ewIndicator.className = "text-tgreen font-bold";
+  }
+
+  const lagElem = document.getElementById('bottom-telemetry-lag');
+  if (lagElem) lagElem.innerText = '12ms';
+
+  const intelBox = document.getElementById('conflicting-intel-box');
+  if (intelBox) {
+    const entry = document.createElement('div');
+    entry.className = "p-1 rounded bg-emerald-950/40 text-tgreen border-l-2 border-green-500 animate-pulse";
+    entry.innerHTML = `<span class="text-slate-400">[CYBER SCRIPT]:</span> Frequency hopping engaged. Comms latency cleared to 12ms.`;
+    intelBox.prepend(entry);
+  }
+
+  alert("CYBER COUNTERMEASURE EXECUTED: Silvus mesh frequency hopping activated. Electronic jamming neutralized!");
+}
+
+function triggerReconScan() {
+  playBeep(1200, 'sine', 0.1);
+  if (state.soldiers && state.soldiers.length > 0) {
+    const s = state.soldiers[0];
+    state.targetPing = { x: s.x + 120, y: s.y - 80, mgrs: "GRID 4892 9180" };
+  }
+
+  const intelBox = document.getElementById('conflicting-intel-box');
+  if (intelBox) {
+    const entry = document.createElement('div');
+    entry.className = "p-1 rounded bg-amber-950/40 text-tamber border-l-2 border-amber-500";
+    entry.innerHTML = `<span class="text-slate-400">[RECON DRONE]:</span> Thermal sweep confirms 2 hostile armor signatures at Grid 4892.`;
+    intelBox.prepend(entry);
+  }
+
+  alert("RECON DRONE SCAN INITIATED: Reaper UAV launched over Sector 4. Target ping updated on tactical minimap!");
+}
+
+function handleQuickDecision(choice) {
+  playAlertSound();
+  quickDecisionSeconds = 30;
+  const timerElem = document.getElementById('decision-timer');
+  if (timerElem) timerElem.innerText = `30s`;
+
+  if (choice === 'chaff') {
+    alert("SQUAD LEADER DECISION: ECM Chaff flare deployed! Hostile radar tracking lock broken.");
+  } else {
+    alert("SQUAD LEADER DECISION: Stealth mesh lock engaged. Squad radar signature suppressed.");
+  }
+}
+
+// Global Keyboard Hotkey Listener (1, 2, 3, 4, 5)
+window.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  if (e.key === '1') triggerCyberCountermeasure();
+  if (e.key === '2') triggerReconScan();
+  if (e.key === '3') executeCOA(2);
+  if (e.key === '4') triggerSquadMoveOrder();
+  if (e.key === '5') overrideCommsSync();
+});
+
 function switchLeftTab(tabName) {
   state.activeLeftTab = tabName;
   const tabAip = document.getElementById('left-tab-aip');
