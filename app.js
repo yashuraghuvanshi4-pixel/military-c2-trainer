@@ -335,8 +335,66 @@ function switchMapStyle(style) {
 }
 
 // ==========================================
-// 3. TAB SWITCHER & CLOCK CONTROLS
+// 3. TOP BAR NAVIGATION TABS, ACCORDIONS & OBJECTIVES
 // ==========================================
+function switchNavTab(tabName) {
+  ['map', 'mission', 'timeline', 'settings'].forEach(t => {
+    const btn = document.getElementById(`nav-tab-${t}`);
+    if (btn) {
+      btn.className = "px-3 py-1 rounded-md font-bold text-slate-400 hover:text-slate-100 flex items-center gap-1.5 transition";
+    }
+  });
+
+  const activeBtn = document.getElementById(`nav-tab-${tabName}`);
+  if (activeBtn) {
+    activeBtn.className = "px-3 py-1 rounded-md font-bold text-tcyan bg-aipblue/20 border border-aipblue/50 flex items-center gap-1.5 shadow-[0_0_8px_rgba(0,240,255,0.2)]";
+  }
+
+  playBeep(1000, 'sine', 0.05);
+
+  if (tabName === 'settings') {
+    openModal('instructor-modal');
+  } else if (tabName === 'timeline') {
+    const timelineElem = document.getElementById('timeline-chart');
+    if (timelineElem) timelineElem.scrollIntoView({ behavior: 'smooth' });
+  } else if (tabName === 'mission') {
+    const accObj = document.getElementById('acc-objectives');
+    if (accObj && accObj.classList.contains('hidden')) {
+      toggleAccordion('acc-objectives');
+    }
+  }
+}
+
+function toggleAccordion(accId) {
+  const content = document.getElementById(accId);
+  const icon = document.getElementById(`icon-${accId}`);
+  if (!content) return;
+
+  if (content.classList.contains('hidden')) {
+    content.classList.remove('hidden');
+    if (icon) icon.classList.add('rotate-180');
+  } else {
+    content.classList.add('hidden');
+    if (icon) icon.classList.remove('rotate-180');
+  }
+  playBeep(900, 'sine', 0.04);
+}
+
+function toggleObjectiveCheck(checkbox) {
+  playBeep(1100, 'sine', 0.06);
+  const container = checkbox.closest('#acc-objectives');
+  if (!container) return;
+
+  const total = container.querySelectorAll('input[type="checkbox"]').length;
+  const checked = container.querySelectorAll('input[type="checkbox"]:checked').length;
+  const pct = Math.round((checked / total) * 100);
+
+  const percentText = document.getElementById('obj-percent-text');
+  const percentBar = document.getElementById('obj-percent-bar');
+  if (percentText) percentText.innerText = `${pct}%`;
+  if (percentBar) percentBar.style.width = `${pct}%`;
+}
+
 function switchLeftTab(tabName) {
   state.activeLeftTab = tabName;
   const tabAip = document.getElementById('left-tab-aip');
